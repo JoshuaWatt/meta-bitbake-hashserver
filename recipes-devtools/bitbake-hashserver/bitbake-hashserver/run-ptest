@@ -1,0 +1,11 @@
+#! /bin/sh
+
+TEST_NAME="bitbake-selftest-hashserv"
+if @datadir@/@BPN@/bin/bitbake-selftest -v hashserv.tests; then
+    echo "PASS: $TEST_NAME"
+    exit 0
+else
+    echo
+    echo -n "FAIL: $TEST_NAME"
+    exit 1
+fi

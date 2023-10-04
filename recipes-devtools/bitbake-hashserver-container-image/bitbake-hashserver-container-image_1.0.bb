@@ -15,4 +15,4 @@ IMAGE_FEATURES = ""
 IMAGE_LINGUAS = ""
 NO_RECOMMENDATIONS = "1"
 
-IMAGE_INSTALL = "bitbake-hashserver"
+IMAGE_INSTALL = "busybox bitbake-hashserver"

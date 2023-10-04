@@ -1,0 +1,123 @@
+---
+name: build-and-test
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+
+jobs:
+  build:
+    env:
+      MACHINE: qemux86-64
+
+    runs-on: ubuntu-22.04
+    steps:
+      # GitHub actions doesn't support anchors, so these need to be kept in
+      # sync with the list below manually
+      - name: Restore build cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            build/sstate-cache
+            build/cache
+          key: bitbake-cache
+
+      - name: Restore layer cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            core
+            meta-openembedded
+            meta-virtualization
+          key: layer-cache
+
+      - uses: actions/checkout@v3
+        with:
+          path: meta-bitbake-hashserver
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update -y && sudo apt install -y \
+            gawk wget git diffstat unzip texinfo gcc build-essential chrpath \
+            socat cpio python3 python3-pip python3-pexpect xz-utils debianutils \
+            iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev \
+            python3-subunit mesa-common-dev zstd liblz4-tool file locales \
+            podman skopeo
+
+      - name: Checkout bitbake
+        run: |
+          git clone https://git.openembedded.org/bitbake
+          git -C bitbake checkout f3ba9c3726ec7b38b557100d8a2d4b6a1446a968
+
+      - name: Setup layers
+        run: |
+          ./meta-bitbake-hashserver/scripts/setup-layers
+
+      - name: Initialize build
+        run: |
+          TEMPLATECONF=$(pwd)/meta-bitbake-hashserver/conf/templates/bitbake-hashserver . ./core/oe-init-build-env build
+          cat >> conf/local.conf <<HEREDOC
+          INHERIT += "rm_work"
+          HEREDOC
+
+      - name: Build
+        run: |
+          . ./core/oe-init-build-env build
+
+          echo "" > conf/auto.conf
+
+          bitbake bitbake-hashserver-container-image
+
+      - name: Copy build artifacts
+        run: |
+          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs-*-oci.tar \
+            ./oci-$MACHINE.tar
+          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs.spdx.tar.zst \
+            ./spdx-$MACHINE.tar.zst
+
+      - name: Build test image
+        run: |
+          . ./core/oe-init-build-env build
+
+          cat > conf/auto.conf <<HEREDOC
+          PTEST_ENABLED:pn-bitbake-hashserver = "1"
+          IMAGE_INSTALL:append = " bitbake-hashserver-ptest ptest-runner"
+          HEREDOC
+
+          bitbake bitbake-hashserver-container-image
+
+      - name: Copy test artifacts
+        run: |
+          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs-*-oci.tar \
+            ./oci-test-$MACHINE.tar
+
+      - name: Load test image
+        run: |
+          podman load -i ./oci-test-$MACHINE.tar
+
+      - name: Run tests
+        run: |
+          podman run --rm -it --entrypoint /usr/bin/ptest-runner localhost/bitbake-hashserver-container-image:latest
+
+      - name: Save build cache
+        if: ${{ ! cancelled() }}
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            build/sstate-cache
+            build/cache
+          key: bitbake-cache
+
+      - name: Save layer cache
+        if: ${{ ! cancelled() }}
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            core
+            meta-openembedded
+            meta-virtualization
+          key: layer-cache

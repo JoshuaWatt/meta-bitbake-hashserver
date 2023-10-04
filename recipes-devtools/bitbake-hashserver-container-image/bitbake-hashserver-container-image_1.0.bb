@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 
 IMAGE_FSTYPES = "container oci"
 OCI_IMAGE_ENTRYPOINT = "${datadir}/bitbake-hashserver/bin/bitbake-hashserv"
-OCI_IMAGE_TAG = "${IMAGE_BASENAME}:${PV}"
+OCI_IMAGE_TAG = "${IMAGE_BASENAME}:latest"
 OCI_IMAGE_AUTHOR = "Joshua Watt"
 OCI_IMAGE_AUTHOR_EMAIL = "Joshua.Watt@garmin.com"
 

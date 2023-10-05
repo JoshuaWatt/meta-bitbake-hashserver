@@ -108,6 +108,7 @@ jobs:
           TEMPLATECONF=$(pwd)/meta-bitbake-hashserver/conf/templates/bitbake-hashserver . ./core/oe-init-build-env build
           cat >> conf/local.conf <<HEREDOC
           INHERIT += "rm_work"
+          PTEST_ENABLED:pn-bitbake-hashserver = "1"
           HEREDOC
 
       - name: Build
@@ -116,30 +117,18 @@ jobs:
 
           echo "" > conf/auto.conf
 
-          bitbake bitbake-hashserver-container-image
+          bitbake \
+            bitbake-hashserver-container-image \
+            bitbake-hashserver-test-container-image
 
       - name: Copy build artifacts
         run: |
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs-*-oci.tar \
             ./oci-$MACHINE.tar
+          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-test-container-image-$MACHINE.rootfs-*-oci.tar \
+            ./oci-test-$MACHINE.tar
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs.spdx.tar.zst \
             ./spdx-$MACHINE.tar.zst
-
-      - name: Build test image
-        run: |
-          . ./core/oe-init-build-env build
-
-          cat > conf/auto.conf <<HEREDOC
-          PTEST_ENABLED:pn-bitbake-hashserver = "1"
-          IMAGE_INSTALL:append = " bitbake-hashserver-ptest ptest-runner"
-          HEREDOC
-
-          bitbake bitbake-hashserver-container-image
-
-      - name: Copy test artifacts
-        run: |
-          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs-*-oci.tar \
-            ./oci-test-$MACHINE.tar
 
       - name: Load test image
         run: |
@@ -147,7 +136,7 @@ jobs:
 
       - name: Run tests
         run: |
-          podman run --rm -it --entrypoint /usr/bin/ptest-runner localhost/bitbake-hashserver-container-image:latest
+          podman run --rm -it localhost/bitbake-hashserver-test-container-image:latest
 
       - name: Save build cache
         if: ${{ ! cancelled() }}

@@ -92,12 +92,27 @@ jobs:
             socat cpio python3 python3-pip python3-pexpect xz-utils debianutils \
             iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev \
             python3-subunit mesa-common-dev zstd liblz4-tool file locales \
-            podman skopeo
+            podman
+
+      - name: Restore bitbake git cache
+        id: bitbake-git-cache
+        uses: actions/cache/restore@v3
+        with:
+          path: bitbake
+          key: "bitbake-git-${{ env.BITBAKE_GITREV }}"
 
       - name: Checkout bitbake
+        if: steps.bitbake-git-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://git.openembedded.org/bitbake
           git -C bitbake checkout $BITBAKE_GITREV
+
+      - name: Save bitbake git cache
+        if: steps.bitbake-git-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: bitbake
+          key: "bitbake-git-${{ env.BITBAKE_GITREV }}"
 
       - name: Setup layers
         run: |

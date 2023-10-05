@@ -10,9 +10,48 @@ on:
 
 
 jobs:
+  validate-layers:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Restore layer cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            core
+            meta-openembedded
+            meta-virtualization
+          key: layer-cache
+
+      - uses: actions/checkout@v3
+        with:
+          path: meta-bitbake-hashserver
+
+      - name: Setup layers
+        run: |
+          ./meta-bitbake-hashserver/scripts/setup-layers
+
+      - name: Validate layer JSON
+        run: |
+          ./meta-bitbake-hashserver/scripts/validate-layer-json.py
+
+      # Can't save the cache here, since it can only be saved by one job and
+      # build does it right now. Should probably change that
+      #- name: Save layer cache
+      #  if: ${{ ! cancelled() }}
+      #  uses: actions/cache/save@v3
+      #  with:
+      #    path: |
+      #      core
+      #      meta-openembedded
+      #      meta-virtualization
+      #    key: layer-cache
+
   build:
+    needs:
+      - validate-layers
     env:
       MACHINE: qemux86-64
+      BITBAKE_GITREV: "f3ba9c3726ec7b38b557100d8a2d4b6a1446a968"
 
     runs-on: ubuntu-22.04
     steps:
@@ -51,7 +90,7 @@ jobs:
       - name: Checkout bitbake
         run: |
           git clone https://git.openembedded.org/bitbake
-          git -C bitbake checkout f3ba9c3726ec7b38b557100d8a2d4b6a1446a968
+          git -C bitbake checkout $BITBAKE_GITREV
 
       - name: Setup layers
         run: |

@@ -23,7 +23,7 @@
                         "uri": "https://github.com/JoshuaWatt/meta-bitbake-hashserver.git"
                     }
                 },
-                "rev": "8284d8cadb01c16ef7205d3d0606fffcee767587"
+                "rev": "8789d135e2f3487b12bc2b4f0124321e01d0248c"
             },
             "path": "meta-bitbake-hashserver"
         },

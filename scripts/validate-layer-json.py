@@ -1,4 +1,6 @@
 #! /usr/bin/env python3
+#
+# Copyright (c) 2023 Garmin Ltd. or its subsidiaries
 
 import argparse
 import sys

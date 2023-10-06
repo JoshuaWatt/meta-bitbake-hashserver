@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: meta-bitbake-hashserver
+          # Have the fetch the entire repo to validate the commits
+          fetch-depth: 0
 
       - name: Restore layer cache
         uses: actions/cache/restore@v3

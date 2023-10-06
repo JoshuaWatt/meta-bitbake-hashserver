@@ -41,15 +41,20 @@ def main():
                 args.top_dir / layer["path"],
                 "merge-base",
                 "--is-ancestor",
-                f"origin/{branch}",
                 rev,
+                f"origin/{branch}",
             ]
         )
         if p.returncode != 0:
             print(f"ERROR: {name}: {branch} does not contain {rev}")
             errors += 1
 
-    return not errors
+    if errors:
+        print(f"Found {errors} error")
+        return 1
+
+    print("Everything looks OK")
+    return 0
 
 
 if __name__ == "__main__":

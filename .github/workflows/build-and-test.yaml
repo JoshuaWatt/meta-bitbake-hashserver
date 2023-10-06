@@ -18,14 +18,12 @@ env:
   IMAGE_NAME: "bitbake-hashserver"
 
 jobs:
-  validate-layers:
+  create-layer-cache:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
           path: meta-bitbake-hashserver
-          # Have the fetch the entire repo to validate the commits
-          fetch-depth: 0
 
       - name: Restore layer cache
         uses: actions/cache/restore@v3
@@ -35,19 +33,13 @@ jobs:
             meta-openembedded
             meta-virtualization
           key: "layer-cache-${{ hashFiles('meta-bitbake-hashserver/scripts/setup-layers.json') }}"
-          restore-keys: |
-            layer-cache-
 
       - name: Setup layers
         run: |
           ./meta-bitbake-hashserver/scripts/setup-layers
 
-      - name: Validate layer JSON
-        run: |
-          ./meta-bitbake-hashserver/scripts/validate-layer-json.py
-
       - name: Save layer cache
-        if: ${{ ! cancelled() }}
+        if: steps.restore-layer-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v3
         with:
           path: |
@@ -55,48 +47,6 @@ jobs:
             meta-openembedded
             meta-virtualization
           key: "layer-cache-${{ hashFiles('meta-bitbake-hashserver/scripts/setup-layers.json') }}"
-
-  build:
-    needs:
-      - validate-layers
-
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          path: meta-bitbake-hashserver
-
-      - name: Restore layer cache
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            core
-            meta-openembedded
-            meta-virtualization
-          key: "layer-cache-${{ hashFiles('meta-bitbake-hashserver/scripts/setup-layers.json') }}"
-          restore-keys: |
-            layer-cache-
-
-      - name: Restore build cache
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            build/sstate-cache
-            build/cache
-          key: "build-cache-${{ github.sha }}"
-          restore-keys: |
-            build-cache-
-            bitbake-cache-
-            bitbake-cache
-
-      - name: Install build dependencies
-        run: |
-          sudo apt update -y && sudo apt install -y \
-            gawk wget git diffstat unzip texinfo gcc build-essential chrpath \
-            socat cpio python3 python3-pip python3-pexpect xz-utils debianutils \
-            iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev \
-            python3-subunit mesa-common-dev zstd liblz4-tool file locales \
-            podman
 
       - name: Restore bitbake git cache
         id: bitbake-git-cache
@@ -117,6 +67,149 @@ jobs:
         with:
           path: bitbake
           key: "bitbake-git-${{ env.BITBAKE_GITREV }}"
+
+  validate-layers:
+    needs:
+      - create-layer-cache
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: meta-bitbake-hashserver
+          # Have the fetch the entire repo to validate the commits
+          fetch-depth: 0
+
+      - name: Restore layer cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            core
+            meta-openembedded
+            meta-virtualization
+          key: "layer-cache-${{ hashFiles('meta-bitbake-hashserver/scripts/setup-layers.json') }}"
+          fail-on-cache-miss: true
+
+      - name: Validate layer JSON
+        run: |
+          ./meta-bitbake-hashserver/scripts/validate-layer-json.py
+
+  yocto-check-layer:
+    needs:
+      - create-layer-cache
+
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: meta-bitbake-hashserver
+
+      - name: Restore layer cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            core
+            meta-openembedded
+            meta-virtualization
+          key: "layer-cache-${{ hashFiles('meta-bitbake-hashserver/scripts/setup-layers.json') }}"
+          fail-on-cache-miss: true
+
+      - name: Restore bitbake git cache
+        uses: actions/cache/restore@v3
+        with:
+          path: bitbake
+          key: "bitbake-git-${{ env.BITBAKE_GITREV }}"
+          fail-on-cache-miss: true
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update -y && sudo apt install -y \
+            gawk wget git diffstat unzip texinfo gcc build-essential chrpath \
+            socat cpio python3 python3-pip python3-pexpect xz-utils debianutils \
+            iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev \
+            python3-subunit mesa-common-dev zstd liblz4-tool file locales
+
+      - name: Restore yocto-check-layers cache
+        id: restore-yocto-check-layers-cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            build/cache
+          key: "yocto-check-layers-${{ github.sha }}"
+          restore-keys: |
+            yocto-check-layers-
+
+      - name: Run yocto-check-layer
+        run: |
+          . ./core/oe-init-build-env
+
+          $GITHUB_WORKSPACE/core/scripts/yocto-check-layer \
+              $GITHUB_WORKSPACE/meta-bitbake-hashserver \
+              --no-auto-dependency \
+              --dependency \
+                  $GITHUB_WORKSPACE/meta-openembedded/meta-python \
+                  $GITHUB_WORKSPACE/meta-openembedded/meta-networking \
+                  $GITHUB_WORKSPACE/meta-openembedded/meta-oe \
+                  $GITHUB_WORKSPACE/meta-virtualization \
+                  $GITHUB_WORKSPACE/meta-openembedded/meta-filesystems/ \
+              --machines \
+                  $MACHINE
+
+      - name: Save yocto-check-layers cache
+        if: steps.restore-yocto-check-layers-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            build/cache
+          key: "yocto-check-layers-${{ github.sha }}"
+
+  build:
+    needs:
+      - create-layer-cache
+      - validate-layers
+
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: meta-bitbake-hashserver
+
+      - name: Restore layer cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            core
+            meta-openembedded
+            meta-virtualization
+          key: "layer-cache-${{ hashFiles('meta-bitbake-hashserver/scripts/setup-layers.json') }}"
+          fail-on-cache-miss: true
+
+      - name: Restore bitbake git cache
+        uses: actions/cache/restore@v3
+        with:
+          path: bitbake
+          key: "bitbake-git-${{ env.BITBAKE_GITREV }}"
+          fail-on-cache-miss: true
+
+      - name: Restore build cache
+        id: restore-build-cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            build/sstate-cache
+            build/cache
+          key: "build-cache-${{ github.sha }}"
+          restore-keys: |
+            build-cache-
+            bitbake-cache-
+            bitbake-cache
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update -y && sudo apt install -y \
+            gawk wget git diffstat unzip texinfo gcc build-essential chrpath \
+            socat cpio python3 python3-pip python3-pexpect xz-utils debianutils \
+            iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev \
+            python3-subunit mesa-common-dev zstd liblz4-tool file locales
 
       - name: Setup layers
         run: |
@@ -149,7 +242,7 @@ jobs:
             ./$IMAGE_NAME-$MACHINE-spdx.tar.zst
 
       - name: Save build cache
-        if: ${{ ! cancelled() }}
+        if: steps.restore-build-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v3
         with:
           path: |
@@ -197,6 +290,7 @@ jobs:
     needs:
       - build
       - test
+      - yocto-check-layer
 
     permissions:
       contents: read

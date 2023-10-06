@@ -7,6 +7,22 @@ Pre-built images for the hash equivalence server are published
 [here](https://github.com/JoshuaWatt/meta-bitbake-hashserver/pkgs/container/bitbake-hashserver)
 and can be pulled from there using your favorite container management tool.
 
+Alternatively, `docker-compose` can be used to quickly spin up a local hash
+equivalence server backed by a postgresql database for testing. To start it,
+run:
+```shell
+docker-compose up
+```
+in this directory.
+
+Once the server is running, add the following to your `local.conf` to instruct
+bitbake to use the running server:
+
+```
+BB_HASHSERVE = "ws://localhost:9000"
+BB_SIGNATURE_HANDLER = "OEEquivHash"
+```
+
 ## Building from Source
 
 This layer provides support for downloading dependent layers using the

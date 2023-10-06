@@ -96,8 +96,6 @@ jobs:
           ./meta-bitbake-hashserver/scripts/validate-layer-json.py
 
   yocto-check-layer:
-    # Don't run this on tag pushes
-    if: github.event_name != 'push' || ! startsWith(github.ref, 'refs/tags/')
     needs:
       - create-layer-cache
 
@@ -143,6 +141,10 @@ jobs:
             yocto-check-layers-
 
       - name: Run yocto-check-layer
+        id: run-yocto-check-layer
+        # Don't run this on tag pushes. This step is skipped as opposed to the
+        # entire job so that dependent jobs will still run
+        if: github.event_name != 'push' || ! startsWith(github.ref, 'refs/tags/')
         run: |
           . ./core/oe-init-build-env
 
@@ -159,7 +161,7 @@ jobs:
                   $MACHINE
 
       - name: Save yocto-check-layers cache
-        if: steps.restore-yocto-check-layers-cache.outputs.cache-hit != 'true'
+        if: steps.restore-yocto-check-layers-cache.outputs.cache-hit != 'true' && steps.run-yocto-check-layer.outcome == 'success'
         uses: actions/cache/save@v3
         with:
           path: |

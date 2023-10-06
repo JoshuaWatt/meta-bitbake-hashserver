@@ -4,6 +4,8 @@ Date: Tue, 3 Oct 2023 14:49:44 -0600
 Subject: [PATCH] Revert "pin setuptools_scm < 7 due to broken builds (#810)"
 
 This reverts commit fb85893635d7f9c0da3b1ff8c6d0fc436357633a.
+
+Upstream-Status: Pending
 ---
  pyproject.toml | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

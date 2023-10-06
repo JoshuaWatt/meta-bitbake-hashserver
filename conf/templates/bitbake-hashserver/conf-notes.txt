@@ -1,2 +1,4 @@
-FIXME: Please place here the description of this build configuration.
-It will be shown to the users when they set up their builds via TEMPLATECONF.
+Build is now configured to build the bitbake hash server container. To build
+it, run
+
+    bitbake bitbake-hashserver-container-image

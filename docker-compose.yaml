@@ -1,0 +1,35 @@
+# Copyright (C) 2023 Garmin Ltd.
+#
+# SPDX-License-Identifier: MIT
+
+---
+version: "3.7"
+services:
+  postgresql:
+    image: postgres:16.0
+    restart: always
+    environment:
+      - POSTGRES_DB=hashserver
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  hashserver:
+    image: ghcr.io/joshuawatt/bitbake-hashserver:latest
+    pull_policy: always
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      - HASHSERVER_LOG_LEVEL=INFO
+      - "HASHSERVER_BIND=ws://0.0.0.0:9000"
+      - "HASHSERVER_DB=postgresql+asyncpg://postgresql:5432/hashserver"
+      - HASHSERVER_DB_USERNAME=postgres
+      - HASHSERVER_DB_PASSWORD=postgres
+    depends_on:
+      - postgresql
+
+volumes:
+  postgres-data:
+

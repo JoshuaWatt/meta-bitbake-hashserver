@@ -14,6 +14,7 @@ on:
 
 env:
   MACHINE: qemux86-64
+  CONTAINER_ARCH: amd64
   BITBAKE_GITREV: "f3ba9c3726ec7b38b557100d8a2d4b6a1446a968"
   IMAGE_NAME: "bitbake-hashserver"
 
@@ -233,11 +234,16 @@ jobs:
       - name: Copy build artifacts
         run: |
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs-*-oci.tar \
-            ./$IMAGE_NAME-$MACHINE-oci.tar
+            ./${IMAGE_NAME}-${CONTAINER_ARCH}-oci.tar
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-test-container-image-$MACHINE.rootfs-*-oci.tar \
-            ./$IMAGE_NAME-test-$MACHINE-oci.tar
+            ./${IMAGE_NAME}-test-${CONTAINER_ARCH}-oci.tar
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs.spdx.tar.zst \
-            ./$IMAGE_NAME-$MACHINE-spdx.tar.zst
+            ./${IMAGE_NAME}-${CONTAINER_ARCH}-spdx.tar.zst
+
+      # Can't run this yet because its not correctly set by meta-virt for x86_64
+      #- name: Validate container arch
+      #  run: |
+      #    [ $(skopeo inspect oci-archive:./${IMAGE_NAME}-${CONTAINER_ARCH}-oci.tar | jq -r .Architecture) == "${CONTAINER_ARCH}" ]
 
       - name: Save build cache
         if: steps.restore-build-cache.outputs.cache-hit != 'true'
@@ -251,20 +257,20 @@ jobs:
       - name: Save OCI image
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-oci"
-          path: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-oci.tar"
+          name: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-oci"
+          path: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-oci.tar"
 
       - name: Save SPDX
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-spdx"
-          path: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-spdx.tar.zst"
+          name: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-spdx"
+          path: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-spdx.tar.zst"
 
       - name: Save OCI test image
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci"
-          path: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci.tar"
+          name: "${{ env.IMAGE_NAME }}-test-${{ env.CONTAINER_ARCH }}-oci"
+          path: "${{ env.IMAGE_NAME }}-test-${{ env.CONTAINER_ARCH }}-oci.tar"
 
   test:
     needs:
@@ -274,11 +280,11 @@ jobs:
       - name: Download OCI test image
         uses: actions/download-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci"
+          name: "${{ env.IMAGE_NAME }}-test-${{ env.CONTAINER_ARCH }}-oci"
 
       - name: Load test image
         run: |
-          podman load -i ./$IMAGE_NAME-test-$MACHINE-oci.tar
+          podman load -i ./${IMAGE_NAME}-test-${CONTAINER_ARCH}-oci.tar
 
       - name: Run tests
         run: |
@@ -300,7 +306,7 @@ jobs:
       - name: Download OCI image
         uses: actions/download-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-oci"
+          name: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-oci"
 
       - name: Login to registry
         run: |
@@ -326,4 +332,4 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          skopeo copy oci-archive:$IMAGE_NAME-$MACHINE-oci.tar docker://$IMAGE_ID:$VERSION
+          skopeo copy oci-archive:${IMAGE_NAME}-${CONTAINER_ARCH}-oci.tar docker://$IMAGE_ID:$VERSION

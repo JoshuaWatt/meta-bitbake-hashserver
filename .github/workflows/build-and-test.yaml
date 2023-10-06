@@ -12,6 +12,10 @@ on:
 
   workflow_dispatch:
 
+env:
+  MACHINE: qemux86-64
+  BITBAKE_GITREV: "f3ba9c3726ec7b38b557100d8a2d4b6a1446a968"
+  IMAGE_NAME: "bitbake-hashserver"
 
 jobs:
   validate-layers:
@@ -55,9 +59,6 @@ jobs:
   build:
     needs:
       - validate-layers
-    env:
-      MACHINE: qemux86-64
-      BITBAKE_GITREV: "f3ba9c3726ec7b38b557100d8a2d4b6a1446a968"
 
     runs-on: ubuntu-22.04
     steps:
@@ -142,15 +143,15 @@ jobs:
       - name: Copy build artifacts
         run: |
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs-*-oci.tar \
-            ./oci-$MACHINE.tar
+            ./$IMAGE_NAME-$MACHINE-oci.tar
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-test-container-image-$MACHINE.rootfs-*-oci.tar \
-            ./oci-test-$MACHINE.tar
+            ./$IMAGE_NAME-test-$MACHINE-oci.tar
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs.spdx.tar.zst \
-            ./spdx-$MACHINE.tar.zst
+            ./$IMAGE_NAME-$MACHINE-spdx.tar.zst
 
       - name: Load test image
         run: |
-          podman load -i ./oci-test-$MACHINE.tar
+          podman load -i ./$IMAGE_NAME-test-$MACHINE-oci.tar
 
       - name: Run tests
         run: |
@@ -168,27 +169,24 @@ jobs:
       - name: Save OCI image
         uses: actions/upload-artifact@v3
         with:
-          name: bitbake-hashserver-oci
-          path: "oci-${{ env.MACHINE }}.tar"
+          name: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-oci"
+          path: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-oci.tar"
 
       - name: Save SPDX
         uses: actions/upload-artifact@v3
         with:
-          name: bitbake-hashserver-spdx
-          path: "spdx-${{ env.MACHINE }}.tar.zst"
+          name: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-spdx"
+          path: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-spdx.tar.zst"
 
       - name: Save OCI test image
         uses: actions/upload-artifact@v3
         with:
-          name: bitbake-hashserver-test-oci
-          path: "oci-test-${{ env.MACHINE }}.tar"
+          name: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci"
+          path: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci.tar"
 
   publish:
     needs:
       - build
-    env:
-      MACHINE: qemux86-64
-      IMAGE_NAME: "bitbake-hashserver"
 
     permissions:
       contents: read
@@ -199,7 +197,7 @@ jobs:
       - name: Download OCI image
         uses: actions/download-artifact@v3
         with:
-          name: bitbake-hashserver-oci
+          name: "${{ env.IMAGE_NAME }}-${{ env.MACHINE }}-oci"
 
       - name: Login to registry
         if: ${{ github.event_name == 'push' }}
@@ -227,4 +225,4 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          skopeo copy oci-archive:oci-$MACHINE.tar docker://$IMAGE_ID:$VERSION
+          skopeo copy oci-archive:$IMAGE_NAME-$MACHINE-oci.tar docker://$IMAGE_ID:$VERSION

@@ -1,0 +1,126 @@
+From 2ede0a04e9b0d87bf15d5bcaedf20bdba34ab47e Mon Sep 17 00:00:00 2001
+From: Joshua Watt <JPEWhacker@gmail.com>
+Date: Fri, 29 Sep 2023 12:34:28 -0600
+Subject: [PATCH 08/16] asyncrpc: Add context manager API
+
+Adds context manager API for the asyncrcp client class which allow
+writing code that will automatically close the connection like so:
+
+    with hashserv.create_client(address) as client:
+       ...
+
+Rework the bitbake-hashclient tool and PR server to use this new API to
+fix warnings about unclosed event loops when exiting
+
+Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
+---
+ bin/bitbake-hashclient    | 36 +++++++++++++++++-------------------
+ lib/bb/asyncrpc/client.py | 13 +++++++++++++
+ lib/prserv/serv.py        |  6 +++---
+ 3 files changed, 33 insertions(+), 22 deletions(-)
+
+diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
+index 3f265e8f..a02a65b9 100755
+--- a/bin/bitbake-hashclient
++++ b/bin/bitbake-hashclient
+@@ -56,25 +56,24 @@ def main():
+             nonlocal missed_hashes
+             nonlocal max_time
+ 
+-            client = hashserv.create_client(args.address)
+-
+-            for i in range(args.requests):
+-                taskhash = hashlib.sha256()
+-                taskhash.update(args.taskhash_seed.encode('utf-8'))
+-                taskhash.update(str(i).encode('utf-8'))
++            with hashserv.create_client(args.address) as client:
++                for i in range(args.requests):
++                    taskhash = hashlib.sha256()
++                    taskhash.update(args.taskhash_seed.encode('utf-8'))
++                    taskhash.update(str(i).encode('utf-8'))
+ 
+-                start_time = time.perf_counter()
+-                l = client.get_unihash(METHOD, taskhash.hexdigest())
+-                elapsed = time.perf_counter() - start_time
++                    start_time = time.perf_counter()
++                    l = client.get_unihash(METHOD, taskhash.hexdigest())
++                    elapsed = time.perf_counter() - start_time
+ 
+-                with lock:
+-                    if l:
+-                        found_hashes += 1
+-                    else:
+-                        missed_hashes += 1
++                    with lock:
++                        if l:
++                            found_hashes += 1
++                        else:
++                            missed_hashes += 1
+ 
+-                    max_time = max(elapsed, max_time)
+-                    pbar.update()
++                        max_time = max(elapsed, max_time)
++                        pbar.update()
+ 
+         max_time = 0
+         found_hashes = 0
+@@ -174,9 +173,8 @@ def main():
+ 
+     func = getattr(args, 'func', None)
+     if func:
+-        client = hashserv.create_client(args.address)
+-
+-        return func(args, client)
++        with hashserv.create_client(args.address) as client:
++            return func(args, client)
+ 
+     return 0
+ 
+diff --git a/lib/bb/asyncrpc/client.py b/lib/bb/asyncrpc/client.py
+index 802c07df..009085c3 100644
+--- a/lib/bb/asyncrpc/client.py
++++ b/lib/bb/asyncrpc/client.py
+@@ -103,6 +103,12 @@ class AsyncClient(object):
+     async def ping(self):
+         return await self.invoke({"ping": {}})
+ 
++    async def __aenter__(self):
++        return self
++
++    async def __aexit__(self, exc_type, exc_value, traceback):
++        await self.close()
++
+ 
+ class Client(object):
+     def __init__(self):
+@@ -153,3 +159,10 @@ class Client(object):
+         if sys.version_info >= (3, 6):
+             self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+         self.loop.close()
++
++    def __enter__(self):
++        return self
++
++    def __exit__(self, exc_type, exc_value, traceback):
++        self.close()
++        return False
+diff --git a/lib/prserv/serv.py b/lib/prserv/serv.py
+index ea793316..6168eb18 100644
+--- a/lib/prserv/serv.py
++++ b/lib/prserv/serv.py
+@@ -345,9 +345,9 @@ def auto_shutdown():
+ def ping(host, port):
+     from . import client
+ 
+-    conn = client.PRClient()
+-    conn.connect_tcp(host, port)
+-    return conn.ping()
++    with client.PRClient() as conn:
++        conn.connect_tcp(host, port)
++        return conn.ping()
+ 
+ def connect(host, port):
+     from . import client
+-- 
+2.34.1
+

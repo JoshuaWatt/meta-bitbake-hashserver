@@ -1,0 +1,43 @@
+From 496e2be9d0ab4d35ba2e6c860fcdfda6dde411da Mon Sep 17 00:00:00 2001
+From: Joshua Watt <JPEWhacker@gmail.com>
+Date: Thu, 5 Oct 2023 13:33:20 -0600
+Subject: [PATCH 05/16] bitbake-hashclient: Add clean-unused subcommand
+
+Adds a subcommand to clean unused outhash entries from the server based
+on age
+
+Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
+---
+ bin/bitbake-hashclient | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
+index d0910433..3f265e8f 100755
+--- a/bin/bitbake-hashclient
++++ b/bin/bitbake-hashclient
+@@ -121,6 +121,11 @@ def main():
+         else:
+             print("No query specified")
+ 
++    def handle_clean_unused(args, client):
++        result = client.clean_unused(args.max_age)
++        print("Removed %d rows" % (result["count"]))
++        return 0
++
+     parser = argparse.ArgumentParser(description='Hash Equivalence Client')
+     parser.add_argument('--address', default=DEFAULT_ADDRESS, help='Server address (default "%(default)s")')
+     parser.add_argument('--log', default='WARNING', help='Set logging level')
+@@ -150,6 +155,10 @@ def main():
+                                help="Remove entries from table where KEY == VALUE")
+     remove_parser.set_defaults(func=handle_remove)
+ 
++    clean_unused_parser = subparsers.add_parser('clean-unused', help="Remove unused database entries")
++    clean_unused_parser.add_argument("max_age", metavar="SECONDS", type=int, help="Remove unused entries older than SECONDS old")
++    clean_unused_parser.set_defaults(func=handle_clean_unused)
++
+     args = parser.parse_args()
+ 
+     logger = logging.getLogger('hashserv')
+-- 
+2.34.1
+

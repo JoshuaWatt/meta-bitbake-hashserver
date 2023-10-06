@@ -1,0 +1,48 @@
+From 80dc5ae7c339c6b93906d4840483d1618baef491 Mon Sep 17 00:00:00 2001
+From: Joshua Watt <JPEWhacker@gmail.com>
+Date: Thu, 28 Sep 2023 09:16:51 -0600
+Subject: [PATCH 02/16] bitbake-hashclient: Add remove subcommand
+
+Adds a subcommand to invoke the remove API on the server
+
+[YOCTO #15064]
+
+Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
+---
+ bin/bitbake-hashclient | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
+index 494f1759..d0910433 100755
+--- a/bin/bitbake-hashclient
++++ b/bin/bitbake-hashclient
+@@ -113,6 +113,14 @@ def main():
+                     with lock:
+                         pbar.update()
+ 
++    def handle_remove(args, client):
++        where = {k: v for k, v in args.where}
++        if where:
++            result = client.remove(where)
++            print("Removed %d row(s)" % (result["count"]))
++        else:
++            print("No query specified")
++
+     parser = argparse.ArgumentParser(description='Hash Equivalence Client')
+     parser.add_argument('--address', default=DEFAULT_ADDRESS, help='Server address (default "%(default)s")')
+     parser.add_argument('--log', default='WARNING', help='Set logging level')
+@@ -137,6 +145,11 @@ def main():
+                                help='Include string in outhash')
+     stress_parser.set_defaults(func=handle_stress)
+ 
++    remove_parser = subparsers.add_parser('remove', help="Remove hash entries")
++    remove_parser.add_argument("--where", "-w", metavar="KEY VALUE", nargs=2, action="append", default=[],
++                               help="Remove entries from table where KEY == VALUE")
++    remove_parser.set_defaults(func=handle_remove)
++
+     args = parser.parse_args()
+ 
+     logger = logging.getLogger('hashserv')
+-- 
+2.34.1
+

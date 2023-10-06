@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "main"
+      - "websockets"
     tags:
       - "v*"
   pull_request:

@@ -249,4 +249,8 @@ CONF_VERSION = "2"
 
 INHERT += "create-spdx"
 
+# Enable ptest for the bitbake-hashserver recipe by default so that test images
+# can be build
+PTEST_ENABLED:pn-bitbake-hashserver = "1"
+
 require conf/include/bitbake-hashserver-container.inc

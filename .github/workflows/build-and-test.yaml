@@ -127,7 +127,6 @@ jobs:
           TEMPLATECONF=$(pwd)/meta-bitbake-hashserver/conf/templates/bitbake-hashserver . ./core/oe-init-build-env build
           cat >> conf/local.conf <<HEREDOC
           INHERIT += "rm_work"
-          PTEST_ENABLED:pn-bitbake-hashserver = "1"
           HEREDOC
 
       - name: Build

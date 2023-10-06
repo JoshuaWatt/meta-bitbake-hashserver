@@ -82,8 +82,9 @@ jobs:
           path: |
             build/sstate-cache
             build/cache
-          key: "bitbake-cache-${{ github.sha }}"
+          key: "build-cache-${{ github.sha }}"
           restore-keys: |
+            build-cache-
             bitbake-cache-
             bitbake-cache
 
@@ -162,7 +163,7 @@ jobs:
           path: |
             build/sstate-cache
             build/cache
-          key: "bitbake-cache-${{ github.sha }}"
+          key: "build-cache-${{ github.sha }}"
 
       - name: Save OCI image
         uses: actions/upload-artifact@v3

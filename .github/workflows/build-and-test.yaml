@@ -216,18 +216,13 @@ jobs:
         run: |
           ./meta-bitbake-hashserver/scripts/setup-layers
 
-      - name: Initialize build
-        run: |
-          TEMPLATECONF=$(pwd)/meta-bitbake-hashserver/conf/templates/bitbake-hashserver . ./core/oe-init-build-env build
-          cat >> conf/local.conf <<HEREDOC
-          INHERIT += "rm_work"
-          HEREDOC
-
       - name: Build
         run: |
-          . ./core/oe-init-build-env build
+          TEMPLATECONF=$(pwd)/meta-bitbake-hashserver/conf/templates/bitbake-hashserver . ./core/oe-init-build-env build
 
-          echo "" > conf/auto.conf
+          cat >> conf/auto.conf <<HEREDOC
+          INHERIT += "rm_work"
+          HEREDOC
 
           bitbake \
             bitbake-hashserver-container-image \

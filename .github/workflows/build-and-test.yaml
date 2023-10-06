@@ -26,6 +26,7 @@ jobs:
           path: meta-bitbake-hashserver
 
       - name: Restore layer cache
+        id: restore-layer-cache
         uses: actions/cache/restore@v3
         with:
           path: |

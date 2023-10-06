@@ -149,14 +149,6 @@ jobs:
           cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs.spdx.tar.zst \
             ./$IMAGE_NAME-$MACHINE-spdx.tar.zst
 
-      - name: Load test image
-        run: |
-          podman load -i ./$IMAGE_NAME-test-$MACHINE-oci.tar
-
-      - name: Run tests
-        run: |
-          podman run --rm -it localhost/bitbake-hashserver-test-container-image:latest
-
       - name: Save build cache
         if: ${{ ! cancelled() }}
         uses: actions/cache/save@v3
@@ -184,9 +176,28 @@ jobs:
           name: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci"
           path: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci.tar"
 
+  test:
+    needs:
+      - build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download OCI test image
+        uses: actions/download-artifact@v3
+        with:
+          name: "${{ env.IMAGE_NAME }}-test-${{ env.MACHINE }}-oci"
+
+      - name: Load test image
+        run: |
+          podman load -i ./$IMAGE_NAME-test-$MACHINE-oci.tar
+
+      - name: Run tests
+        run: |
+          podman run --rm -it localhost/bitbake-hashserver-test-container-image:latest
+
   publish:
     needs:
       - build
+      - test
 
     permissions:
       contents: read

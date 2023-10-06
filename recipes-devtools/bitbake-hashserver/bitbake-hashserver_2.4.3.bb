@@ -38,16 +38,6 @@ do_install_ptest() {
         ${D}${PTEST_PATH}/run-ptest
 }
 
-SQLALCHEMY_RDEPENDS = "\
-    python3-sqlalchemy \
-    python3-aiosqlite \
-    python3-asyncpg \
-    python3-aiomysql \
-    python3-greenlet \
-"
-
 RDEPENDS:${PN} += "\
     python3-modules \
-    python3-websockets \
-    ${SQLALCHEMY_RDEPENDS} \
 "

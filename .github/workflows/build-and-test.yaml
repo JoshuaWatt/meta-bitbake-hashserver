@@ -17,7 +17,6 @@ env:
   MACHINE: qemux86-64
   CONTAINER_ARCH: amd64
   BITBAKE_GITREV: "f3ba9c3726ec7b38b557100d8a2d4b6a1446a968"
-  IMAGE_NAME: "bitbake-hashserver"
 
 jobs:
   create-layer-cache:
@@ -232,16 +231,17 @@ jobs:
 
           bitbake \
             bitbake-hashserver-container-image \
-            bitbake-hashserver-test-container-image
+            bitbake-hashserver-test-container-image \
+            bitbake-hashclient-container-image
 
       - name: Copy build artifacts
         run: |
-          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs-*-oci.tar \
-            ./${IMAGE_NAME}-${CONTAINER_ARCH}-oci.tar
-          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-test-container-image-$MACHINE.rootfs-*-oci.tar \
-            ./${IMAGE_NAME}-test-${CONTAINER_ARCH}-oci.tar
-          cp -L build/tmp-glibc/deploy/images/$MACHINE/bitbake-hashserver-container-image-$MACHINE.rootfs.spdx.tar.zst \
-            ./${IMAGE_NAME}-${CONTAINER_ARCH}-spdx.tar.zst
+          for IMAGE_NAME in bitbake-hashserver bitbake-hashserver-test bitbake-hashclient; do
+            cp -L build/tmp-glibc/deploy/images/$MACHINE/$IMAGE_NAME-container-image-$MACHINE.rootfs-*-oci.tar \
+              ./$IMAGE_NAME-${CONTAINER_ARCH}-oci.tar
+            cp -L build/tmp-glibc/deploy/images/$MACHINE/$IMAGE_NAME-container-image-$MACHINE.rootfs.spdx.tar.zst \
+              ./$IMAGE_NAME-${CONTAINER_ARCH}-spdx.tar.zst
+          done
 
       # Can't run this yet because its not correctly set by meta-virt for x86_64
       #- name: Validate container arch
@@ -257,23 +257,35 @@ jobs:
             build/cache
           key: "build-cache-${{ github.sha }}"
 
-      - name: Save OCI image
+      - name: Save Server OCI image
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-oci"
-          path: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-oci.tar"
+          name: "bitbake-hashserver-${{ env.CONTAINER_ARCH }}-oci"
+          path: "bitbake-hashserver-${{ env.CONTAINER_ARCH }}-oci.tar"
 
-      - name: Save SPDX
+      - name: Save Server SPDX
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-spdx"
-          path: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-spdx.tar.zst"
+          name: "bitbake-hashserver-${{ env.CONTAINER_ARCH }}-spdx"
+          path: "bitbake-hashserver-${{ env.CONTAINER_ARCH }}-spdx.tar.zst"
 
-      - name: Save OCI test image
+      - name: Save Server OCI test image
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-test-${{ env.CONTAINER_ARCH }}-oci"
-          path: "${{ env.IMAGE_NAME }}-test-${{ env.CONTAINER_ARCH }}-oci.tar"
+          name: "bitbake-hashserver-test-${{ env.CONTAINER_ARCH }}-oci"
+          path: "bitbake-hashserver-test-${{ env.CONTAINER_ARCH }}-oci.tar"
+
+      - name: Save Client OCI image
+        uses: actions/upload-artifact@v3
+        with:
+          name: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-oci"
+          path: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-oci.tar"
+
+      - name: Save Client SPDX
+        uses: actions/upload-artifact@v3
+        with:
+          name: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-spdx"
+          path: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-spdx.tar.zst"
 
   test:
     needs:
@@ -283,11 +295,11 @@ jobs:
       - name: Download OCI test image
         uses: actions/download-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-test-${{ env.CONTAINER_ARCH }}-oci"
+          name: "bitbake-hashserver-test-${{ env.CONTAINER_ARCH }}-oci"
 
       - name: Load test image
         run: |
-          podman load -i ./${IMAGE_NAME}-test-${CONTAINER_ARCH}-oci.tar
+          podman load -i ./bitbake-hashserver-test-${CONTAINER_ARCH}-oci.tar
 
       - name: Run tests
         run: |
@@ -306,10 +318,15 @@ jobs:
 
     runs-on: ubuntu-22.04
     steps:
-      - name: Download OCI image
+      - name: Download Server OCI image
         uses: actions/download-artifact@v3
         with:
-          name: "${{ env.IMAGE_NAME }}-${{ env.CONTAINER_ARCH }}-oci"
+          name: "bitbake-hashserver-${{ env.CONTAINER_ARCH }}-oci"
+
+      - name: Download Client OCI image
+        uses: actions/download-artifact@v3
+        with:
+          name: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-oci"
 
       - name: Login to registry
         run: |
@@ -317,22 +334,24 @@ jobs:
 
       - name: Push image
         run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          for IMAGE_NAME in bitbake-hashserver bitbake-hashclient; do
+            IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
 
-          # This changes all uppercase characters to lowercase.
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+            # This changes all uppercase characters to lowercase.
+            IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-          # This strips the git ref prefix from the version.
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+            # This strips the git ref prefix from the version.
+            VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
-          # This strips the "v" prefix from the tag name.
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+            # This strips the "v" prefix from the tag name.
+            [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
-          # This uses the Docker `latest` tag convention.
-          [ "$VERSION" == "main" ] && VERSION=latest
-          [ "$VERSION" == "master" ] && VERSION=latest
+            # This uses the Docker `latest` tag convention.
+            [ "$VERSION" == "main" ] && VERSION=latest
+            [ "$VERSION" == "master" ] && VERSION=latest
 
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
+            echo IMAGE_ID=$IMAGE_ID
+            echo VERSION=$VERSION
 
-          skopeo copy oci-archive:${IMAGE_NAME}-${CONTAINER_ARCH}-oci.tar docker://$IMAGE_ID:$VERSION
+            skopeo copy oci-archive:${IMAGE_NAME}-${CONTAINER_ARCH}-oci.tar docker://$IMAGE_ID:$VERSION
+          done

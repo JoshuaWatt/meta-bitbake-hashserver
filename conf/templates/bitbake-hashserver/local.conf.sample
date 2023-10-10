@@ -247,7 +247,7 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 # this doesn't mean anything to you.
 CONF_VERSION = "2"
 
-INHERT += "create-spdx"
+INHERIT += "create-spdx"
 
 # Enable ptest for the bitbake-hashserver recipe by default so that test images
 # can be build

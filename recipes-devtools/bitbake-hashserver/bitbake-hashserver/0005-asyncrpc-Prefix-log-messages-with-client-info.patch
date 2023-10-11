@@ -1,7 +1,7 @@
-From 6152b36ca8f67b0b3c6234c83d36088c634f2b15 Mon Sep 17 00:00:00 2001
+From c5ee307a9685814cd688e1b922aa22f2c990cbf3 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Fri, 29 Sep 2023 14:36:03 -0600
-Subject: [PATCH 10/16] asyncrpc: Prefix log messages with client info
+Subject: [PATCH 05/17] asyncrpc: Prefix log messages with client info
 
 Adds a logging adaptor to the asyncrpc clients that prefixes log
 messages with the client remote address to aid in debugging
@@ -70,7 +70,7 @@ index 3040ac91..7569ad6c 100644
      @abc.abstractmethod
      def accept_client(self, socket):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 9707bfc5..15c2d0bb 100644
+index b0bd63c5..5ba22c07 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -207,7 +207,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):

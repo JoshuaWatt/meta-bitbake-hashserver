@@ -1,7 +1,7 @@
-From 9cd72539aba9079d7adc687bdb5da61ad0320a7f Mon Sep 17 00:00:00 2001
+From 6641d8f6d9604c755c1949ea7813ec3c555ee96e Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Tue, 26 Sep 2023 12:08:43 -0600
-Subject: [PATCH 06/16] asyncrpc: Abstract sockets
+Subject: [PATCH 01/17] asyncrpc: Abstract sockets
 
 Rewrites the asyncrpc client and server code to make it possible to have
 other transport backends that are not stream based (e.g. websockets
@@ -788,7 +788,7 @@ index 9cb3fd57..3a401835 100644
      from . import server
      db = setup_database(dbname, sync=sync)
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index d5c98186..0ac857a5 100644
+index f676d267..b3eabda6 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
 @@ -28,22 +28,26 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
@@ -878,13 +878,13 @@ index d5c98186..0ac857a5 100644
  
      async def clean_unused(self, max_age):
          await self._set_mode(self.MODE_NORMAL)
--        return await self.send_message({"clean_unused": {"max_age_seconds": max_age}})
-+        return await self.invoke({"clean_unused": {"max_age_seconds": max_age}})
+-        return await self.send_message({"clean-unused": {"max_age_seconds": max_age}})
++        return await self.invoke({"clean-unused": {"max_age_seconds": max_age}})
  
  
  class Client(bb.asyncrpc.Client):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index b2ca357b..9707bfc5 100644
+index 45bf476b..b0bd63c5 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -165,8 +165,8 @@ class ServerCursor(object):

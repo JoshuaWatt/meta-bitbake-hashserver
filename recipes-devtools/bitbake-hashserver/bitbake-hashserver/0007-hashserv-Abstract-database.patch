@@ -1,7 +1,7 @@
-From 5c845f35535185fcb6abca5abb45e5594779d272 Mon Sep 17 00:00:00 2001
+From e12ecf6172c354d9668b7d866a4b93cbbacd5a0c Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
-Date: Fri, 29 Sep 2023 15:53:30 -0600
-Subject: [PATCH 12/16] hashserv: Abstract database
+Date: Wed, 11 Oct 2023 13:03:11 -0600
+Subject: [PATCH 07/17] hashserv: Abstract database
 
 Abstracts the way the database backend is accessed by the hash
 equivalence server to make it possible to use other backends
@@ -153,7 +153,7 @@ index 56b9c6bc..90d8cff1 100644
  
      (typ, a) = parse_address(addr)
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 15c2d0bb..916010b9 100644
+index 5ba22c07..f8ea649a 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -3,18 +3,16 @@
@@ -287,7 +287,7 @@ index 15c2d0bb..916010b9 100644
 -                'reset-stats': self.handle_reset_stats,
 -                'backfill-wait': self.handle_backfill_wait,
 -                'remove': self.handle_remove,
--                'clean_unused': self.handle_clean_unused,
+-                'clean-unused': self.handle_clean_unused,
 -            })
 +            self.handlers.update(
 +                {
@@ -296,7 +296,7 @@ index 15c2d0bb..916010b9 100644
 +                    "reset-stats": self.handle_reset_stats,
 +                    "backfill-wait": self.handle_backfill_wait,
 +                    "remove": self.handle_remove,
-+                    "clean_unused": self.handle_clean_unused,
++                    "clean-unused": self.handle_clean_unused,
 +                }
 +            )
  

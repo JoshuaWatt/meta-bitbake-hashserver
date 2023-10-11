@@ -232,11 +232,12 @@ jobs:
           bitbake \
             bitbake-hashserver-container-image \
             bitbake-hashserver-test-container-image \
-            bitbake-hashclient-container-image
+            bitbake-hashclient-container-image \
+            bitbake-hashserver-web-ui-container-image
 
       - name: Copy build artifacts
         run: |
-          for IMAGE_NAME in bitbake-hashserver bitbake-hashserver-test bitbake-hashclient; do
+          for IMAGE_NAME in bitbake-hashserver bitbake-hashserver-test bitbake-hashclient bitbake-hashserver-web-ui; do
             cp -L build/tmp-glibc/deploy/images/$MACHINE/$IMAGE_NAME-container-image-$MACHINE.rootfs-*-oci.tar \
               ./$IMAGE_NAME-${CONTAINER_ARCH}-oci.tar
             cp -L build/tmp-glibc/deploy/images/$MACHINE/$IMAGE_NAME-container-image-$MACHINE.rootfs.spdx.tar.zst \
@@ -287,6 +288,18 @@ jobs:
           name: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-spdx"
           path: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-spdx.tar.zst"
 
+      - name: Save Web UI OCI image
+        uses: actions/upload-artifact@v3
+        with:
+          name: "bitbake-hashserver-web-ui-${{ env.CONTAINER_ARCH }}-oci"
+          path: "bitbake-hashserver-web-ui-${{ env.CONTAINER_ARCH }}-oci.tar"
+
+      - name: Save Web UI SPDX
+        uses: actions/upload-artifact@v3
+        with:
+          name: "bitbake-hashserver-web-ui-${{ env.CONTAINER_ARCH }}-spdx"
+          path: "bitbake-hashserver-web-ui-${{ env.CONTAINER_ARCH }}-spdx.tar.zst"
+
   test:
     needs:
       - build
@@ -328,13 +341,18 @@ jobs:
         with:
           name: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-oci"
 
+      - name: Download Web UI OCI image
+        uses: actions/download-artifact@v3
+        with:
+          name: "bitbake-hashserver-web-ui-${{ env.CONTAINER_ARCH }}-oci"
+
       - name: Login to registry
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | skopeo login ghcr.io --username $ --password-stdin
 
       - name: Push image
         run: |
-          for IMAGE_NAME in bitbake-hashserver bitbake-hashclient; do
+          for IMAGE_NAME in bitbake-hashserver bitbake-hashclient bitbake-hashserver-web-ui; do
             IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
 
             # This changes all uppercase characters to lowercase.

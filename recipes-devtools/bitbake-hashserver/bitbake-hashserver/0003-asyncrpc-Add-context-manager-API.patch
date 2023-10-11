@@ -1,7 +1,7 @@
-From 2ede0a04e9b0d87bf15d5bcaedf20bdba34ab47e Mon Sep 17 00:00:00 2001
+From 2105864a790643ce1fb0cef015795412d51443a4 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Fri, 29 Sep 2023 12:34:28 -0600
-Subject: [PATCH 08/16] asyncrpc: Add context manager API
+Subject: [PATCH 03/17] asyncrpc: Add context manager API
 
 Adds context manager API for the asyncrcp client class which allow
 writing code that will automatically close the connection like so:

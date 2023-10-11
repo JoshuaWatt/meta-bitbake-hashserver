@@ -1,7 +1,7 @@
-From d1cb2746876ad5de0a11c77aa7609f1440642960 Mon Sep 17 00:00:00 2001
+From 5e387340da008216a6aa4875bb761829f7ed249b Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
-Date: Fri, 29 Sep 2023 16:56:53 -0600
-Subject: [PATCH 13/16] hashserv: Add SQLalchemy backend
+Date: Wed, 11 Oct 2023 13:03:14 -0600
+Subject: [PATCH 08/17] hashserv: Add SQLalchemy backend
 
 Adds an SQLAlchemy backend to the server. While this database backend is
 slower than the more direct sqlite backend, it easily supports just
@@ -18,10 +18,10 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  create mode 100644 lib/hashserv/sqlalchemy.py
 
 diff --git a/bin/bitbake-hashserv b/bin/bitbake-hashserv
-index b09458b6..a61e5a12 100755
+index a916a90c..59b8b07f 100755
 --- a/bin/bitbake-hashserv
 +++ b/bin/bitbake-hashserv
-@@ -64,6 +64,16 @@ def main():
+@@ -69,6 +69,16 @@ To bind to all addresses, leave the ADDRESS empty, e.g. "--bind :8686" or
          action="store_true",
          help="Disallow write operations from clients ($HASHSERVER_READ_ONLY)",
      )
@@ -38,7 +38,7 @@ index b09458b6..a61e5a12 100755
  
      args = parser.parse_args()
  
-@@ -85,6 +95,8 @@ def main():
+@@ -90,6 +100,8 @@ To bind to all addresses, leave the ADDRESS empty, e.g. "--bind :8686" or
          args.database,
          upstream=args.upstream,
          read_only=read_only,

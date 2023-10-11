@@ -8,25 +8,26 @@ INHIBIT_DEFAULT_DEPS = "1"
 
 SRC_URI = "git://git.openembedded.org/bitbake;protocol=https;branch=${BRANCH} \
            file://run-ptest \
-           file://0001-hashserv-Add-remove-API.patch \
-           file://0002-bitbake-hashclient-Add-remove-subcommand.patch \
-           file://0003-hashserv-Extend-get_outhash-API-to-optionally-includ.patch \
-           file://0004-hashserv-Add-API-to-clean-unused-entries.patch \
-           file://0005-bitbake-hashclient-Add-clean-unused-subcommand.patch \
-           file://0006-asyncrpc-Abstract-sockets.patch \
-           file://0007-hashserv-Add-websocket-connection-implementation.patch \
-           file://0008-asyncrpc-Add-context-manager-API.patch \
-           file://0009-hashserv-tests-Add-external-database-tests.patch \
-           file://0010-asyncrpc-Prefix-log-messages-with-client-info.patch \
-           file://0011-bitbake-hashserv-Allow-arguments-from-environment.patch \
-           file://0012-hashserv-Abstract-database.patch \
-           file://0013-hashserv-Add-SQLalchemy-backend.patch \
-           file://0014-contrib-Update-hashserv-Dockerfile.patch \
-           file://0015-contrib-hashserv-Add-docker-compose.patch \
-           file://0016-hashserv-Implement-read-only-version-of-report-RPC.patch \
+           file://0001-asyncrpc-Abstract-sockets.patch \
+           file://0002-hashserv-Add-websocket-connection-implementation.patch \
+           file://0003-asyncrpc-Add-context-manager-API.patch \
+           file://0004-hashserv-tests-Add-external-database-tests.patch \
+           file://0005-asyncrpc-Prefix-log-messages-with-client-info.patch \
+           file://0006-bitbake-hashserv-Allow-arguments-from-environment.patch \
+           file://0007-hashserv-Abstract-database.patch \
+           file://0008-hashserv-Add-SQLalchemy-backend.patch \
+           file://0009-contrib-Update-hashserv-Dockerfile.patch \
+           file://0010-contrib-hashserv-Add-docker-compose.patch \
+           file://0011-hashserv-Implement-read-only-version-of-report-RPC.patch \
+           file://0012-asyncrpc-Add-InvokeError.patch \
+           file://0013-asyncrpc-client-Prevent-double-closing-of-loop.patch \
+           file://0014-asyncrpc-client-Add-disconnect-API.patch \
+           file://0015-hashserv-Add-user-permissions.patch \
+           file://0016-hashserv-Add-become-user-API.patch \
+           file://0017-hashserv-Add-db-usage-API.patch \
            "
 BRANCH = "2.6"
-SRCREV = "5a1e5b8dc55d6bb4d93bac3492f8c43ff957e712"
+SRCREV = "29c310be2c00d0e192923a4b90c60771ef0c620c"
 
 S = "${WORKDIR}/git"
 

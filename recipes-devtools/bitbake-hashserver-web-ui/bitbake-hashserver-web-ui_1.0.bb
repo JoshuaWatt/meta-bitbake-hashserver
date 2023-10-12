@@ -8,21 +8,11 @@ INHIBIT_DEFAULT_DEPS = "1"
 
 SRC_URI = "git://github.com/JoshuaWatt/bitbake-hashserver-web-ui.git;protocol=https;branch=${BRANCH}"
 BRANCH = "main"
-SRCREV = "d6c252660994a918d82a25060e88800153b283e8"
+SRCREV = "832f5eb0109ae5374d3be6cdb920e74cd2c2f464"
 
 S = "${WORKDIR}/git"
 
-do_compile() {
-    :
-}
-
-do_install() {
-    cd ${S}
-    oe_runmake install \
-        prefix=${prefix} \
-        datadir=${datadir} \
-        DESTDIR=${D}
-}
+inherit python_hatchling
 
 RDEPENDS:${PN} += "\
     bitbake-hashserver \

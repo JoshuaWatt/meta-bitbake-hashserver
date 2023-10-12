@@ -1,7 +1,7 @@
 From 34dd40ced404c2bf37a8b032fc5b0f03dcc2e168 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Fri, 29 Sep 2023 14:47:07 -0600
-Subject: [PATCH 06/17] bitbake-hashserv: Allow arguments from environment
+Subject: [PATCH 06/18] bitbake-hashserv: Allow arguments from environment
 
 Allows the arguments to the bitbake-hashserv command to be specified in
 environment variables. This is a very common idiom when running services

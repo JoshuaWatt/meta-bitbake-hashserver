@@ -1,7 +1,7 @@
-From f806b8c6184a6482144bea6911b28e6f0d856123 Mon Sep 17 00:00:00 2001
+From 8de7e02fb0a3c5a9eb26336a9a3f4a2233d68a9e Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:22 -0600
-Subject: [PATCH 12/17] asyncrpc: Add InvokeError
+Subject: [PATCH 12/18] asyncrpc: Add InvokeError
 
 Adds support for Invocation Errors (that is, errors raised by the actual
 RPC call instead of at the protocol level) to propagate across the

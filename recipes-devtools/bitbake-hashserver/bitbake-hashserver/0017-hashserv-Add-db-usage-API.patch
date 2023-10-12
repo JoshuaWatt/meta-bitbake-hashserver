@@ -1,7 +1,7 @@
-From be754b7ce2ab16a6f58eb0362c2658bbb8668e4f Mon Sep 17 00:00:00 2001
+From 85b360cc24a077c3b2dddb13a698f8fdb5dfd563 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:42 -0600
-Subject: [PATCH 17/17] hashserv: Add db-usage API
+Subject: [PATCH 17/18] hashserv: Add db-usage API
 
 Adds an API to query the server for the usage of the database (e.g. how
 many rows are present in each table)
@@ -74,7 +74,7 @@ index 0a281a9b..0fda376f 100644
  
      def _get_async_client(self):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 4476ca28..fd045d7f 100644
+index 7bac7ab3..0e36d13c 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -249,6 +249,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
@@ -85,7 +85,7 @@ index 4476ca28..fd045d7f 100644
                  # Not always read-only, but internally checks if the server is
                  # read-only
                  "report": self.handle_report,
-@@ -547,6 +548,10 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -566,6 +567,10 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          oldest = datetime.now() - timedelta(seconds=-max_age)
          return {"count": await self.db.clean_unused(oldest)}
  

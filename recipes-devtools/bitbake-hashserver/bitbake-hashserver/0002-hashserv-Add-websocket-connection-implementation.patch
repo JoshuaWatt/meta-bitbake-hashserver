@@ -1,7 +1,7 @@
 From 82188435876e3c68aea0d34115ba2887a24c978c Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 27 Sep 2023 15:30:30 -0600
-Subject: [PATCH 02/17] hashserv: Add websocket connection implementation
+Subject: [PATCH 02/18] hashserv: Add websocket connection implementation
 
 Adds support to the hash equivalence client and server to communicate
 over websockets. Since websockets are message orientated instead of

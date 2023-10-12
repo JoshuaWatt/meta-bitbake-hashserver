@@ -1,7 +1,7 @@
-From af63e0ef5a25c59c3ce30255876cbd7a1f497e7b Mon Sep 17 00:00:00 2001
+From a627b4dcec66e7a0efac4d5a965fd4fe686d3292 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:26 -0600
-Subject: [PATCH 15/17] hashserv: Add user permissions
+Subject: [PATCH 15/18] hashserv: Add user permissions
 
 Adds support for the hashserver to have per-user permissions. User
 management is done via a new "auth" RPC API where a client can
@@ -30,15 +30,15 @@ server.
 
 Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
 ---
- bin/bitbake-hashclient     |  81 ++++++-
+ bin/bitbake-hashclient     |  81 ++++++++-
  bin/bitbake-hashserv       |  37 ++++
- lib/hashserv/__init__.py   |  69 ++++--
- lib/hashserv/client.py     |  66 +++++-
- lib/hashserv/server.py     | 430 +++++++++++++++++++++++++++++++++----
- lib/hashserv/sqlalchemy.py | 111 +++++++++-
- lib/hashserv/sqlite.py     | 105 +++++++++
- lib/hashserv/tests.py      | 276 +++++++++++++++++++++++-
- 8 files changed, 1091 insertions(+), 84 deletions(-)
+ lib/hashserv/__init__.py   |  69 ++++---
+ lib/hashserv/client.py     |  66 ++++++-
+ lib/hashserv/server.py     | 357 ++++++++++++++++++++++++++++++++++++-
+ lib/hashserv/sqlalchemy.py | 111 +++++++++++-
+ lib/hashserv/sqlite.py     | 105 +++++++++++
+ lib/hashserv/tests.py      | 276 +++++++++++++++++++++++++++-
+ 8 files changed, 1055 insertions(+), 47 deletions(-)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
 index a02a65b9..0006c2f6 100755
@@ -479,7 +479,7 @@ index 61c72cc9..6b2bf54d 100644
 -        return AsyncClient()
 +        return AsyncClient(self.username, self.password)
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index de38e675..ac226a2e 100644
+index 1299558e..00ca1124 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -8,13 +8,48 @@ import asyncio
@@ -626,33 +626,26 @@ index de38e675..ac226a2e 100644
      ):
          super().__init__(socket, "OEHASHEQUIV", logger)
          self.db_engine = db_engine
-@@ -124,6 +239,9 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
-         self.max_chunk = bb.asyncrpc.DEFAULT_MAX_CHUNK
+@@ -125,6 +240,8 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          self.backfill_queue = backfill_queue
          self.upstream = upstream
+         self.read_only = read_only
 +        self.user = None
 +        self.anon_perms = anon_perms
-+        self.read_only = read_only
  
          self.handlers.update(
              {
-@@ -131,9 +249,12 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
-                 "get-outhash": self.handle_get_outhash,
-                 "get-stream": self.handle_get_stream,
-                 "get-stats": self.handle_get_stats,
--                "report": (
--                    self.handle_report_get_unihash if read_only else self.handle_report
--                ),
-+                # Not always read-only, but internally checks if the server is
-+                # read-only
-+                "report": self.handle_report,
+@@ -135,6 +252,9 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+                 # Not always read-only, but internally checks if the server is
+                 # read-only
+                 "report": self.handle_report,
 +                "auth": self.handle_auth,
 +                "get-user": self.handle_get_user,
 +                "get-all-users": self.handle_get_all_users,
              }
          )
  
-@@ -145,9 +266,36 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -146,9 +266,36 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
                      "backfill-wait": self.handle_backfill_wait,
                      "remove": self.handle_remove,
                      "clean-unused": self.handle_clean_unused,
@@ -689,7 +682,7 @@ index de38e675..ac226a2e 100644
      def validate_proto_version(self):
          return self.proto_version > (1, 0) and self.proto_version <= (1, 1)
  
-@@ -177,6 +325,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -178,6 +325,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
          raise bb.asyncrpc.ClientError("Unrecognized command %r" % msg)
  
@@ -697,7 +690,7 @@ index de38e675..ac226a2e 100644
      async def handle_get(self, request):
          method = request["method"]
          taskhash = request["taskhash"]
-@@ -205,6 +354,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -206,6 +354,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
          return d
  
@@ -705,7 +698,7 @@ index de38e675..ac226a2e 100644
      async def handle_get_outhash(self, request):
          method = request["method"]
          outhash = request["outhash"]
-@@ -235,6 +385,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -236,6 +385,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          await self.db.insert_unihash(data["method"], data["taskhash"], data["unihash"])
          await self.db.insert_outhash(data)
  
@@ -713,92 +706,20 @@ index de38e675..ac226a2e 100644
      async def handle_get_stream(self, request):
          await self.socket.send("ok")
  
-@@ -285,48 +436,49 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
- 
-         return "ok"
+@@ -303,8 +453,11 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+             "unihash": unihash,
+         }
  
 +    # Since this can be called either read only or to report, the check to
 +    # report is made inside the function
 +    @permissions(READ_PERM)
      async def handle_report(self, data):
--        outhash_data = {
--            "method": data["method"],
--            "outhash": data["outhash"],
--            "taskhash": data["taskhash"],
--            "created": datetime.now(),
--        }
--
--        for k in ("owner", "PN", "PV", "PR", "task", "outhash_siginfo"):
--            if k in data:
--                outhash_data[k] = data[k]
-+        if not self.read_only and self.user_has_permissions(REPORT_PERM):
-+            outhash_data = {
-+                "method": data["method"],
-+                "outhash": data["outhash"],
-+                "taskhash": data["taskhash"],
-+                "created": datetime.now(),
-+            }
+-        if self.read_only:
++        if self.read_only or not self.user_has_permissions(REPORT_PERM):
+             return await self.report_readonly(data)
  
--        # Insert the new entry, unless it already exists
--        if await self.db.insert_outhash(outhash_data):
--            # If this row is new, check if it is equivalent to another
--            # output hash
--            row = await self.db.get_equivalent_for_outhash(
--                data["method"], data["outhash"], data["taskhash"]
--            )
-+            for k in ("owner", "PN", "PV", "PR", "task", "outhash_siginfo"):
-+                if k in data:
-+                    outhash_data[k] = data[k]
- 
--            if row is not None:
--                # A matching output hash was found. Set our taskhash to the
--                # same unihash since they are equivalent
--                unihash = row["unihash"]
--            else:
--                # No matching output hash was found. This is probably the
--                # first outhash to be added.
--                unihash = data["unihash"]
-+            # Insert the new entry, unless it already exists
-+            if await self.db.insert_outhash(outhash_data):
-+                # If this row is new, check if it is equivalent to another
-+                # output hash
-+                row = await self.db.get_equivalent_for_outhash(
-+                    data["method"], data["outhash"], data["taskhash"]
-+                )
- 
--                # Query upstream to see if it has a unihash we can use
--                if self.upstream_client is not None:
--                    upstream_data = await self.upstream_client.get_outhash(
--                        data["method"], data["outhash"], data["taskhash"]
--                    )
--                    if upstream_data is not None:
--                        unihash = upstream_data["unihash"]
-+                if row is not None:
-+                    # A matching output hash was found. Set our taskhash to the
-+                    # same unihash since they are equivalent
-+                    unihash = row["unihash"]
-+                else:
-+                    # No matching output hash was found. This is probably the
-+                    # first outhash to be added.
-+                    unihash = data["unihash"]
- 
--            await self.db.insert_unihash(data["method"], data["taskhash"], unihash)
-+                    # Query upstream to see if it has a unihash we can use
-+                    if self.upstream_client is not None:
-+                        upstream_data = await self.upstream_client.get_outhash(
-+                            data["method"], data["outhash"], data["taskhash"]
-+                        )
-+                        if upstream_data is not None:
-+                            unihash = upstream_data["unihash"]
- 
--        return await self.handle_report_get_unihash(data)
-+                await self.db.insert_unihash(data["method"], data["taskhash"], unihash)
- 
--    async def handle_report_get_unihash(self, data):
-         unihash_data = await self.get_unihash(data["method"], data["taskhash"])
-         if unihash_data is not None:
-             unihash = unihash_data["unihash"]
-@@ -339,6 +491,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+         outhash_data = {
+@@ -357,6 +510,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
              "unihash": unihash,
          }
  
@@ -806,7 +727,7 @@ index de38e675..ac226a2e 100644
      async def handle_equivreport(self, data):
          await self.db.insert_unihash(data["method"], data["taskhash"], data["unihash"])
  
-@@ -356,11 +509,13 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -374,11 +528,13 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
          return {k: row[k] for k in ("taskhash", "method", "unihash")}
  
@@ -820,7 +741,7 @@ index de38e675..ac226a2e 100644
      async def handle_reset_stats(self, request):
          d = {
              "requests": self.request_stats.todict(),
-@@ -369,6 +524,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -387,6 +543,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          self.request_stats.reset()
          return d
  
@@ -828,7 +749,7 @@ index de38e675..ac226a2e 100644
      async def handle_backfill_wait(self, request):
          d = {
              "tasks": self.backfill_queue.qsize(),
-@@ -376,6 +532,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -394,6 +551,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          await self.backfill_queue.join()
          return d
  
@@ -836,7 +757,7 @@ index de38e675..ac226a2e 100644
      async def handle_remove(self, request):
          condition = request["where"]
          if not isinstance(condition, dict):
-@@ -383,19 +540,178 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -401,19 +559,178 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
          return {"count": await self.db.remove(condition)}
  
@@ -1016,7 +937,7 @@ index de38e675..ac226a2e 100644
          super().__init__(logger)
  
          self.request_stats = Stats()
-@@ -403,6 +719,13 @@ class Server(bb.asyncrpc.AsyncServer):
+@@ -421,6 +738,13 @@ class Server(bb.asyncrpc.AsyncServer):
          self.upstream = upstream
          self.read_only = read_only
          self.backfill_queue = None
@@ -1030,7 +951,7 @@ index de38e675..ac226a2e 100644
  
      def accept_client(self, socket):
          return ServerClient(
-@@ -412,12 +735,34 @@ class Server(bb.asyncrpc.AsyncServer):
+@@ -430,12 +754,34 @@ class Server(bb.asyncrpc.AsyncServer):
              self.backfill_queue,
              self.upstream,
              self.read_only,
@@ -1066,7 +987,7 @@ index de38e675..ac226a2e 100644
              while True:
                  item = await self.backfill_queue.get()
                  if item is None:
-@@ -438,6 +783,9 @@ class Server(bb.asyncrpc.AsyncServer):
+@@ -456,6 +802,9 @@ class Server(bb.asyncrpc.AsyncServer):
  
          self.loop.run_until_complete(self.db_engine.create())
  

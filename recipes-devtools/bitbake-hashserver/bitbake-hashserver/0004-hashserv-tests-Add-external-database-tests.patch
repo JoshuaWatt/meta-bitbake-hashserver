@@ -1,7 +1,7 @@
 From 8082564b3028d206d8b800c55c5f9c2995930fab Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 27 Sep 2023 15:28:53 -0600
-Subject: [PATCH 04/17] hashserv: tests: Add external database tests
+Subject: [PATCH 04/18] hashserv: tests: Add external database tests
 
 Adds support for running the hash equivalence test suite against an
 external hash equivalence implementation.

@@ -1,28 +1,36 @@
-From 194053aa43e0d96ad5607b18f925c73d9e7d9087 Mon Sep 17 00:00:00 2001
+From 70a8d56108d43e89c5cbe32a3567f4f81e633d50 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:20 -0600
-Subject: [PATCH 11/17] hashserv: Implement read-only version of "report" RPC
+Subject: [PATCH 11/18] hashserv: Implement read-only version of "report" RPC
 
 When the hash equivalence server is in read-only mode, it should still
 return a unihash for a given "report" call if there is one.
 
 Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
 ---
- lib/hashserv/server.py | 7 ++++++-
- lib/hashserv/tests.py  | 4 ++--
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ lib/hashserv/server.py | 25 ++++++++++++++++++++++++-
+ lib/hashserv/tests.py  |  4 ++--
+ 2 files changed, 26 insertions(+), 3 deletions(-)
 
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index f8ea649a..de38e675 100644
+index f8ea649a..1299558e 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
-@@ -131,13 +131,15 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -124,6 +124,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+         self.max_chunk = bb.asyncrpc.DEFAULT_MAX_CHUNK
+         self.backfill_queue = backfill_queue
+         self.upstream = upstream
++        self.read_only = read_only
+ 
+         self.handlers.update(
+             {
+@@ -131,13 +132,15 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
                  "get-outhash": self.handle_get_outhash,
                  "get-stream": self.handle_get_stream,
                  "get-stats": self.handle_get_stats,
-+                "report": (
-+                    self.handle_report_get_unihash if read_only else self.handle_report
-+                ),
++                # Not always read-only, but internally checks if the server is
++                # read-only
++                "report": self.handle_report,
              }
          )
  
@@ -33,16 +41,34 @@ index f8ea649a..de38e675 100644
                      "report-equiv": self.handle_equivreport,
                      "reset-stats": self.handle_reset_stats,
                      "backfill-wait": self.handle_backfill_wait,
-@@ -322,6 +324,9 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -283,7 +286,27 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
-             await self.db.insert_unihash(data["method"], data["taskhash"], unihash)
+         return "ok"
  
-+        return await self.handle_report_get_unihash(data)
++    async def report_readonly(self, data):
++        method = data["method"]
++        outhash = data["outhash"]
++        taskhash = data["taskhash"]
 +
-+    async def handle_report_get_unihash(self, data):
-         unihash_data = await self.get_unihash(data["method"], data["taskhash"])
-         if unihash_data is not None:
-             unihash = unihash_data["unihash"]
++        info = await self.get_outhash(method, outhash, taskhash)
++        if info:
++            unihash = info["unihash"]
++        else:
++            unihash = data["unihash"]
++
++        return {
++            "taskhash": taskhash,
++            "method": method,
++            "unihash": unihash,
++        }
++
+     async def handle_report(self, data):
++        if self.read_only:
++            return await self.report_readonly(data)
++
+         outhash_data = {
+             "method": data["method"],
+             "outhash": data["outhash"],
 diff --git a/lib/hashserv/tests.py b/lib/hashserv/tests.py
 index 268b2700..e9a361dc 100644
 --- a/lib/hashserv/tests.py

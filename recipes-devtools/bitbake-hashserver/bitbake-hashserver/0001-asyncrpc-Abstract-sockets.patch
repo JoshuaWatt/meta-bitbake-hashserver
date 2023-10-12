@@ -1,7 +1,7 @@
 From 6641d8f6d9604c755c1949ea7813ec3c555ee96e Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Tue, 26 Sep 2023 12:08:43 -0600
-Subject: [PATCH 01/17] asyncrpc: Abstract sockets
+Subject: [PATCH 01/18] asyncrpc: Abstract sockets
 
 Rewrites the asyncrpc client and server code to make it possible to have
 other transport backends that are not stream based (e.g. websockets

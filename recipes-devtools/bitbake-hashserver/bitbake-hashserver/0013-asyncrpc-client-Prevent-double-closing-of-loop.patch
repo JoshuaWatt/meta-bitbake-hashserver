@@ -1,7 +1,7 @@
-From f2bd416acaec12fa5d19dfeb6bc03666c1c5cd50 Mon Sep 17 00:00:00 2001
+From dffcc33031fff510704ed5d319d7cae1da6a0344 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:24 -0600
-Subject: [PATCH 13/17] asyncrpc: client: Prevent double closing of loop
+Subject: [PATCH 13/18] asyncrpc: client: Prevent double closing of loop
 
 Invalidate the loop in the client close() call so that it is not closed
 twice (which is an error in the asyncio code)

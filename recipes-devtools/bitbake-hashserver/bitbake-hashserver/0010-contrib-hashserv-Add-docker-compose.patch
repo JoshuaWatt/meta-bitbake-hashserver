@@ -1,7 +1,7 @@
 From c7927aa7feec7ca2261e97398cb51646640ad70a Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:18 -0600
-Subject: [PATCH 10/17] contrib: hashserv: Add docker-compose
+Subject: [PATCH 10/18] contrib: hashserv: Add docker-compose
 
 Adds a docker-compose.yaml file and docker-compose script wrapper to run
 it with the correct arguments. This can be used to easily standup a hash

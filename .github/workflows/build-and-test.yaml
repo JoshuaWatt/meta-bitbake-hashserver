@@ -300,7 +300,7 @@ jobs:
           name: "bitbake-hashserver-web-ui-${{ env.CONTAINER_ARCH }}-spdx"
           path: "bitbake-hashserver-web-ui-${{ env.CONTAINER_ARCH }}-spdx.tar.zst"
 
-  test:
+  image-ptest:
     needs:
       - build
     runs-on: ubuntu-22.04
@@ -318,11 +318,49 @@ jobs:
         run: |
           podman run --rm -it localhost/bitbake-hashserver-test-container-image:latest
 
+  server-image-test:
+    needs:
+      - build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download Server OCI image
+        uses: actions/download-artifact@v3
+        with:
+          name: "bitbake-hashserver-${{ env.CONTAINER_ARCH }}-oci"
+
+      - name: Load image
+        run: |
+          podman load -i ./bitbake-hashserver-${CONTAINER_ARCH}-oci.tar
+
+      - name: Validate image can run
+        run : |
+          podman run --rm -it localhost/bitbake-hashserver-container-image:latest --help
+
+  client-image-test:
+    needs:
+      - build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download Client OCI image
+        uses: actions/download-artifact@v3
+        with:
+          name: "bitbake-hashclient-${{ env.CONTAINER_ARCH }}-oci"
+
+      - name: Load image
+        run: |
+          podman load -i ./bitbake-hashclient-${CONTAINER_ARCH}-oci.tar
+
+      - name: Validate image can run
+        run : |
+          podman run --rm -it localhost/bitbake-hashclient-container-image:latest --help
+
   publish:
     if: github.event_name == 'push'
     needs:
       - build
-      - test
+      - image-ptest
+      - server-image-test
+      - client-image-test
       - yocto-check-layer
 
     permissions:

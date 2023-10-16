@@ -41,6 +41,7 @@ do_install() {
     DEST="${D}${datadir}/${BPN}"
 
     install -Dm 0755 ${S}/bin/bitbake-hashserv $DEST/bin/bitbake-hashserv
+    install -Dm 0755 ${S}/bin/bitbake-hashclient $DEST/bin/bitbake-hashclient
     cp --no-preserve=ownership -r ${S}/lib $DEST/
 
     # Remove toaster (QA errors)

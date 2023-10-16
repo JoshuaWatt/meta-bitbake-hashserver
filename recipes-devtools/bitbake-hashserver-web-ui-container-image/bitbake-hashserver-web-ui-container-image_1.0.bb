@@ -1,4 +1,4 @@
-SUMMARY = "Hash Equivalence Server Container Image"
+SUMMARY = "Hash Equivalence Server Web UI Container Image"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
@@ -9,6 +9,10 @@ OCI_IMAGE_TAG = "${IMAGE_BASENAME}:latest"
 OCI_IMAGE_AUTHOR = "Joshua Watt"
 OCI_IMAGE_AUTHOR_EMAIL = "Joshua.Watt@garmin.com"
 OCI_IMAGE_PORTS = "8000"
+OCI_IMAGE_LABELS = "\
+    org.opencontainers.image.description='${SUMMARY}' \
+    org.opencontainers.image.licenses='${LICENSE}' \
+"
 
 inherit image
 inherit image-oci

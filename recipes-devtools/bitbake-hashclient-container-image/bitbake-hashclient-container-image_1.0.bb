@@ -7,6 +7,10 @@ OCI_IMAGE_ENTRYPOINT = "${datadir}/bitbake-hashserver/bin/bitbake-hashclient"
 OCI_IMAGE_TAG = "${IMAGE_BASENAME}:latest"
 OCI_IMAGE_AUTHOR = "Joshua Watt"
 OCI_IMAGE_AUTHOR_EMAIL = "Joshua.Watt@garmin.com"
+OCI_IMAGE_LABELS = "\
+    org.opencontainers.image.description='${SUMMARY}' \
+    org.opencontainers.image.licenses='${LICENSE}' \
+"
 
 inherit image
 inherit image-oci

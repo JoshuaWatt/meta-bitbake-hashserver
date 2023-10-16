@@ -1,0 +1,47 @@
+---
+version: "3.7"
+services:
+  postgresql:
+    image: postgres:16.0
+    restart: always
+    environment:
+      - POSTGRES_DB=hashserver
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  hashserver:
+    image: bitbake-hashserver:latest
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      - HASHSERVER_LOG_LEVEL=INFO
+      - "HASHSERVER_BIND=ws://0.0.0.0:9000"
+      - "HASHSERVER_DB=postgresql+asyncpg://postgresql:5432/hashserver"
+      - HASHSERVER_DB_USERNAME=postgres
+      - HASHSERVER_DB_PASSWORD=postgres
+      - HASHSERVER_ADMIN_USER=admin
+      - HASHSERVER_ADMIN_PASSWORD=secret
+      - "HASHSERVER_ANON_PERMS=@none"
+    depends_on:
+      - postgresql
+
+  webui:
+    image: bitbake-hashserver-web-ui:latest
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - HSUI_HASHSERVER_ADDRESS="ws://hashserver:9000"
+      - HSUI_HASHSERVER_USER=admin
+      - HSUI_HASHSERVER_PASSWORD=secret
+      - HSUI_SELF_REGISTER_ENABLED=true
+      - "HSUI_DEFAULT_PERMS=@read @report"
+      - HSUI_TEST_USER=web-test-user
+    depends_on:
+      - postgresql
+
+volumes:
+  postgres-data:

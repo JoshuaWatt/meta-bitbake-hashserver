@@ -227,6 +227,7 @@ jobs:
 
           cat >> conf/auto.conf <<HEREDOC
           INHERIT += "rm_work"
+          OCI_IMAGE_LABELS:append = " org.opencontainers.image.source='${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}'"
           HEREDOC
 
           bitbake \

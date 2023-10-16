@@ -1,7 +1,7 @@
-From 187fab1dd7d57ad3a17cf6bab70609ff56214623 Mon Sep 17 00:00:00 2001
+From 7bb90b7522407cc5fb62c8ffd018f95309ac005e Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Mon, 16 Oct 2023 10:08:39 -0600
-Subject: [PATCH 18/20] hashserv: test: Add bitbake-hashclient tests
+Subject: [PATCH 18/21] hashserv: test: Add bitbake-hashclient tests
 
 The bitbake-hashclient command-line tool now has a lot more features
 which should be tested, so add some tests for them.

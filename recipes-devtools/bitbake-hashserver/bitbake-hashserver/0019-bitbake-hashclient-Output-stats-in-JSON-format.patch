@@ -1,7 +1,7 @@
-From 0f699eeeadc8f17c7207a51332508968137587e7 Mon Sep 17 00:00:00 2001
+From 36623471b9dcbc16a57f4f8ddbdd42daceee46cb Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Mon, 16 Oct 2023 10:20:23 -0600
-Subject: [PATCH 19/20] bitbake-hashclient: Output stats in JSON format
+Subject: [PATCH 19/21] bitbake-hashclient: Output stats in JSON format
 
 Outputting the stats in JSON format makes more sense as it's easier for
 a downstream tool to parse if desired.
@@ -13,7 +13,7 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
-index 70caf3fe..94b02619 100755
+index 58aa02ee..3ff7b763 100755
 --- a/bin/bitbake-hashclient
 +++ b/bin/bitbake-hashclient
 @@ -15,6 +15,7 @@ import threading

@@ -1,7 +1,7 @@
-From 9bdeffd736dfa9cffa076823d70927d3c7db329c Mon Sep 17 00:00:00 2001
+From a82bb4f84bde54b65ebedcef95acde71890581c0 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:42 -0600
-Subject: [PATCH 16/20] hashserv: Add db-usage API
+Subject: [PATCH 16/21] hashserv: Add db-usage API
 
 Adds an API to query the server for the usage of the database (e.g. how
 many rows are present in each table)
@@ -17,7 +17,7 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  6 files changed, 69 insertions(+)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
-index 4b3dfcd6..b9a6ba62 100755
+index cfbc197e..5d65c7bc 100755
 --- a/bin/bitbake-hashclient
 +++ b/bin/bitbake-hashclient
 @@ -161,6 +161,19 @@ def main():

@@ -1,7 +1,7 @@
-From 4b337ff6c3dd6fab298b73a00c221dc978d881cc Mon Sep 17 00:00:00 2001
+From 6cda98c1b7a3ed54afd856294215305ae476fa2c Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:26 -0600
-Subject: [PATCH 14/20] hashserv: Add user permissions
+Subject: [PATCH 14/21] hashserv: Add user permissions
 
 Adds support for the hashserver to have per-user permissions. User
 management is done via a new "auth" RPC API where a client can
@@ -30,7 +30,7 @@ server.
 
 Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
 ---
- bin/bitbake-hashclient     |  81 ++++++++-
+ bin/bitbake-hashclient     |  84 ++++++++-
  bin/bitbake-hashserv       |  37 ++++
  lib/hashserv/__init__.py   |  69 ++++---
  lib/hashserv/client.py     |  66 ++++++-
@@ -38,10 +38,10 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  lib/hashserv/sqlalchemy.py | 111 +++++++++++-
  lib/hashserv/sqlite.py     | 105 +++++++++++
  lib/hashserv/tests.py      | 276 +++++++++++++++++++++++++++-
- 8 files changed, 1055 insertions(+), 47 deletions(-)
+ 8 files changed, 1058 insertions(+), 47 deletions(-)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
-index a02a65b9..0006c2f6 100755
+index a02a65b9..328c15cd 100755
 --- a/bin/bitbake-hashclient
 +++ b/bin/bitbake-hashclient
 @@ -14,6 +14,7 @@ import sys
@@ -143,7 +143,7 @@ index a02a65b9..0006c2f6 100755
      args = parser.parse_args()
  
      logger = logging.getLogger('hashserv')
-@@ -171,10 +235,23 @@ def main():
+@@ -171,10 +235,26 @@ def main():
      console.setLevel(level)
      logger.addHandler(console)
  
@@ -151,10 +151,13 @@ index a02a65b9..0006c2f6 100755
 +    password = args.password
 +
 +    if login is None and args.netrc:
-+        n = netrc.netrc()
-+        auth = n.authenticators(args.address)
-+        if auth is not None:
-+            login, _, password = auth
++        try:
++            n = netrc.netrc()
++            auth = n.authenticators(args.address)
++            if auth is not None:
++                login, _, password = auth
++        except FileNotFoundError:
++            pass
 +
      func = getattr(args, 'func', None)
      if func:

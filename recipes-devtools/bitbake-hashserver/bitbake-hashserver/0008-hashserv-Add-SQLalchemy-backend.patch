@@ -1,7 +1,7 @@
 From 8490c7923da825dfb57ca629b8e2eca643b98147 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:14 -0600
-Subject: [PATCH 08/20] hashserv: Add SQLalchemy backend
+Subject: [PATCH 08/21] hashserv: Add SQLalchemy backend
 
 Adds an SQLAlchemy backend to the server. While this database backend is
 slower than the more direct sqlite backend, it easily supports just

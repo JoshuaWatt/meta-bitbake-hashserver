@@ -28,6 +28,7 @@ SRC_URI = "git://git.openembedded.org/bitbake;protocol=https;branch=${BRANCH} \
            file://0018-hashserv-test-Add-bitbake-hashclient-tests.patch \
            file://0019-bitbake-hashclient-Output-stats-in-JSON-format.patch \
            file://0020-bitbake-hashserver-Allow-anonymous-permissions-to-be.patch \
+           file://0021-hashserv-tests-Allow-authentication-for-external-ser.patch \
            "
 BRANCH = "2.6"
 SRCREV = "05051152cc42acc52bcf9af9a696f632fac4307f"

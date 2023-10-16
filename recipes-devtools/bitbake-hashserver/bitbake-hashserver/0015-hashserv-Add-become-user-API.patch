@@ -1,7 +1,7 @@
-From 3d065507f6df93670c10af937b2f31b7cac4fc72 Mon Sep 17 00:00:00 2001
+From c299f410eb27923269ec823a51575905624cb8be Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:27 -0600
-Subject: [PATCH 15/20] hashserv: Add become-user API
+Subject: [PATCH 15/21] hashserv: Add become-user API
 
 Adds API that allows a user admin to impersonate another user in the
 system. This makes it easier to write external services that have
@@ -17,7 +17,7 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  4 files changed, 97 insertions(+), 5 deletions(-)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
-index 0006c2f6..4b3dfcd6 100755
+index 328c15cd..cfbc197e 100755
 --- a/bin/bitbake-hashclient
 +++ b/bin/bitbake-hashclient
 @@ -166,6 +166,7 @@ def main():
@@ -28,7 +28,7 @@ index 0006c2f6..4b3dfcd6 100755
      parser.add_argument('--no-netrc', '-n', action="store_false", dest="netrc", help="Do not use .netrc")
  
      subparsers = parser.add_subparsers()
-@@ -248,6 +249,8 @@ def main():
+@@ -251,6 +252,8 @@ def main():
      if func:
          try:
              with hashserv.create_client(args.address, login, password) as client:

@@ -336,6 +336,38 @@ jobs:
         run : |
           podman run --rm -it localhost/bitbake-hashserver-container-image:latest --help
 
+      - uses: actions/checkout@v3
+        with:
+          path: meta-bitbake-hashserver
+
+      - name: Copy image to docker
+        run: |
+          skopeo copy oci-archive:bitbake-hashserver-${CONTAINER_ARCH}-oci.tar docker-daemon:bitbake-hashserver:latest
+
+      - name: Start containers
+        working-directory: ./meta-bitbake-hashserver/test/hashserver/
+        run: |
+          docker-compose up --detach
+
+      - name: Download OCI test image
+        uses: actions/download-artifact@v3
+        with:
+          name: "bitbake-hashserver-test-${{ env.CONTAINER_ARCH }}-oci"
+
+      - name: Load test image
+        run: |
+          podman load -i ./bitbake-hashserver-test-${CONTAINER_ARCH}-oci.tar
+
+      - name: Run tests
+        run: |
+          podman run --rm -it --net=host \
+            --entrypoint /usr/share/bitbake-hashserver/bin/bitbake-selftest \
+            --env BB_TEST_HASHSERV=ws://localhost:9000 \
+            --env BB_TEST_HASHSERV_USERNAME=admin \
+            --env BB_TEST_HASHSERV_PASSWORD=secret \
+            localhost/bitbake-hashserver-test-container-image:latest \
+            -v hashserv.tests.TestHashEquivalenceExternalServer
+
   client-image-test:
     needs:
       - build

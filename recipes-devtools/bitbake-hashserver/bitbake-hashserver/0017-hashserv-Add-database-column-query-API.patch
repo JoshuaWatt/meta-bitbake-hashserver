@@ -1,7 +1,7 @@
-From 4b8315d170d7da75a28bdc98af22a69b0c63473a Mon Sep 17 00:00:00 2001
+From 1c394df26f20122bf0067e27374048b23f0d2d8d Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Thu, 12 Oct 2023 15:19:13 -0600
-Subject: [PATCH 17/20] hashserv: Add database column query API
+Subject: [PATCH 17/21] hashserv: Add database column query API
 
 Adds an API to retrieve the columns that can be queried on from the
 database backend. This prevents front end applications from needing to
@@ -18,7 +18,7 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  6 files changed, 42 insertions(+)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
-index b9a6ba62..70caf3fe 100755
+index 5d65c7bc..58aa02ee 100755
 --- a/bin/bitbake-hashclient
 +++ b/bin/bitbake-hashclient
 @@ -174,6 +174,10 @@ def main():

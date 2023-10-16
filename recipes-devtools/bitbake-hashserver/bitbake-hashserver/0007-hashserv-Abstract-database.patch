@@ -1,7 +1,7 @@
-From e12ecf6172c354d9668b7d866a4b93cbbacd5a0c Mon Sep 17 00:00:00 2001
+From efed3bff286f7f25e0046be5813f76134d74526d Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:11 -0600
-Subject: [PATCH 07/18] hashserv: Abstract database
+Subject: [PATCH 07/20] hashserv: Abstract database
 
 Abstracts the way the database backend is accessed by the hash
 equivalence server to make it possible to use other backends

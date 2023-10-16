@@ -1,7 +1,7 @@
-From b476e5d23d50a5314787adbdf9f090016c6bd24a Mon Sep 17 00:00:00 2001
+From 3d065507f6df93670c10af937b2f31b7cac4fc72 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:27 -0600
-Subject: [PATCH 16/18] hashserv: Add become-user API
+Subject: [PATCH 15/20] hashserv: Add become-user API
 
 Adds API that allows a user admin to impersonate another user in the
 system. This makes it easier to write external services that have

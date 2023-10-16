@@ -1,7 +1,7 @@
-From 70a8d56108d43e89c5cbe32a3567f4f81e633d50 Mon Sep 17 00:00:00 2001
+From 4047b5e37ec3cfc1765b79c89d9f60c977a56bdc Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:20 -0600
-Subject: [PATCH 11/18] hashserv: Implement read-only version of "report" RPC
+Subject: [PATCH 10/20] hashserv: Implement read-only version of "report" RPC
 
 When the hash equivalence server is in read-only mode, it should still
 return a unihash for a given "report" call if there is one.

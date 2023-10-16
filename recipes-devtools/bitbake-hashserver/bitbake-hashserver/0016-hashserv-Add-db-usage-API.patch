@@ -1,7 +1,7 @@
-From 85b360cc24a077c3b2dddb13a698f8fdb5dfd563 Mon Sep 17 00:00:00 2001
+From 9bdeffd736dfa9cffa076823d70927d3c7db329c Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:42 -0600
-Subject: [PATCH 17/18] hashserv: Add db-usage API
+Subject: [PATCH 16/20] hashserv: Add db-usage API
 
 Adds an API to query the server for the usage of the database (e.g. how
 many rows are present in each table)

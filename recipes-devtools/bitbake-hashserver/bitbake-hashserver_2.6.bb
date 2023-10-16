@@ -17,17 +17,20 @@ SRC_URI = "git://git.openembedded.org/bitbake;protocol=https;branch=${BRANCH} \
            file://0007-hashserv-Abstract-database.patch \
            file://0008-hashserv-Add-SQLalchemy-backend.patch \
            file://0009-contrib-Update-hashserv-Dockerfile.patch \
-           file://0010-contrib-hashserv-Add-docker-compose.patch \
-           file://0011-hashserv-Implement-read-only-version-of-report-RPC.patch \
-           file://0012-asyncrpc-Add-InvokeError.patch \
-           file://0013-asyncrpc-client-Prevent-double-closing-of-loop.patch \
-           file://0014-asyncrpc-client-Add-disconnect-API.patch \
-           file://0015-hashserv-Add-user-permissions.patch \
-           file://0016-hashserv-Add-become-user-API.patch \
-           file://0017-hashserv-Add-db-usage-API.patch \
+           file://0010-hashserv-Implement-read-only-version-of-report-RPC.patch \
+           file://0011-asyncrpc-Add-InvokeError.patch \
+           file://0012-asyncrpc-client-Prevent-double-closing-of-loop.patch \
+           file://0013-asyncrpc-client-Add-disconnect-API.patch \
+           file://0014-hashserv-Add-user-permissions.patch \
+           file://0015-hashserv-Add-become-user-API.patch \
+           file://0016-hashserv-Add-db-usage-API.patch \
+           file://0017-hashserv-Add-database-column-query-API.patch \
+           file://0018-hashserv-test-Add-bitbake-hashclient-tests.patch \
+           file://0019-bitbake-hashclient-Output-stats-in-JSON-format.patch \
+           file://0020-bitbake-hashserver-Allow-anonymous-permissions-to-be.patch \
            "
 BRANCH = "2.6"
-SRCREV = "29c310be2c00d0e192923a4b90c60771ef0c620c"
+SRCREV = "05051152cc42acc52bcf9af9a696f632fac4307f"
 
 S = "${WORKDIR}/git"
 

@@ -1,7 +1,7 @@
-From a627b4dcec66e7a0efac4d5a965fd4fe686d3292 Mon Sep 17 00:00:00 2001
+From 4b337ff6c3dd6fab298b73a00c221dc978d881cc Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:26 -0600
-Subject: [PATCH 15/18] hashserv: Add user permissions
+Subject: [PATCH 14/20] hashserv: Add user permissions
 
 Adds support for the hashserver to have per-user permissions. User
 management is done via a new "auth" RPC API where a client can

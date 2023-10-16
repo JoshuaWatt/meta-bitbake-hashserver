@@ -1,7 +1,7 @@
-From cf970162432202e2ba43b5d10e053aa08c4e09ba Mon Sep 17 00:00:00 2001
+From 4b8315d170d7da75a28bdc98af22a69b0c63473a Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Thu, 12 Oct 2023 15:19:13 -0600
-Subject: [PATCH 18/18] hashserv: Add database column query API
+Subject: [PATCH 17/20] hashserv: Add database column query API
 
 Adds an API to retrieve the columns that can be queried on from the
 database backend. This prevents front end applications from needing to

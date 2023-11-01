@@ -8,7 +8,7 @@ INHIBIT_DEFAULT_DEPS = "1"
 
 SRC_URI = "git://github.com/JoshuaWatt/bitbake-hashserver-web-ui.git;protocol=https;branch=${BRANCH}"
 BRANCH = "main"
-SRCREV = "2e3f1b4b44d5e1e2c7d210587a285d963c9abeec"
+SRCREV = "084f1198d71873db95cf8d1935664dcb8f59468d"
 
 S = "${WORKDIR}/git"
 

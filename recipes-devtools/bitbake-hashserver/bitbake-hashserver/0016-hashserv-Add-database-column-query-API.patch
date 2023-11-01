@@ -1,7 +1,7 @@
-From 1c394df26f20122bf0067e27374048b23f0d2d8d Mon Sep 17 00:00:00 2001
+From 3ff3978a06c2088f6f564e37f34a7f62acc5f1fb Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Thu, 12 Oct 2023 15:19:13 -0600
-Subject: [PATCH 17/21] hashserv: Add database column query API
+Subject: [PATCH 16/22] hashserv: Add database column query API
 
 Adds an API to retrieve the columns that can be queried on from the
 database backend. This prevents front end applications from needing to
@@ -43,10 +43,10 @@ index 5d65c7bc..58aa02ee 100755
  
      logger = logging.getLogger('hashserv')
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index 0fda376f..bdf60f86 100644
+index 0c3f556a..319da2d9 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
-@@ -198,6 +198,10 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
+@@ -190,6 +190,10 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
          await self._set_mode(self.MODE_NORMAL)
          return (await self.invoke({"get-db-usage": {}}))["usage"]
  
@@ -57,7 +57,7 @@ index 0fda376f..bdf60f86 100644
  
  class Client(bb.asyncrpc.Client):
      def __init__(self, username=None, password=None):
-@@ -227,6 +231,7 @@ class Client(bb.asyncrpc.Client):
+@@ -219,6 +223,7 @@ class Client(bb.asyncrpc.Client):
              "delete_user",
              "become_user",
              "get_db_usage",
@@ -66,7 +66,7 @@ index 0fda376f..bdf60f86 100644
  
      def _get_async_client(self):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 0e36d13c..3bbcfcf2 100644
+index 4fec1556..d2fd75df 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -250,6 +250,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
@@ -107,10 +107,10 @@ index 818b5195..cee04bff 100644
 +
 +        return list(columns)
 diff --git a/lib/hashserv/sqlite.py b/lib/hashserv/sqlite.py
-index e9ef38a1..f5c451f4 100644
+index dfdccbba..f65036be 100644
 --- a/lib/hashserv/sqlite.py
 +++ b/lib/hashserv/sqlite.py
-@@ -382,3 +382,10 @@ class Database(object):
+@@ -399,3 +399,10 @@ class Database(object):
                      "rows": cursor.fetchone()[0],
                  }
          return usage

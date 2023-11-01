@@ -1,7 +1,7 @@
-From a82bb4f84bde54b65ebedcef95acde71890581c0 Mon Sep 17 00:00:00 2001
+From c53576428ddcf0aa4d0c8e1c24919b126129baf4 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:42 -0600
-Subject: [PATCH 16/21] hashserv: Add db-usage API
+Subject: [PATCH 15/22] hashserv: Add db-usage API
 
 Adds an API to query the server for the usage of the database (e.g. how
 many rows are present in each table)
@@ -12,9 +12,9 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  lib/hashserv/client.py     |  5 +++++
  lib/hashserv/server.py     |  5 +++++
  lib/hashserv/sqlalchemy.py | 14 ++++++++++++++
- lib/hashserv/sqlite.py     | 20 ++++++++++++++++++++
+ lib/hashserv/sqlite.py     | 37 +++++++++++++++++++++++++++++++++++++
  lib/hashserv/tests.py      |  9 +++++++++
- 6 files changed, 69 insertions(+)
+ 6 files changed, 86 insertions(+)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
 index cfbc197e..5d65c7bc 100755
@@ -51,10 +51,10 @@ index cfbc197e..5d65c7bc 100755
  
      logger = logging.getLogger('hashserv')
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index 0a281a9b..0fda376f 100644
+index 90f1dd71..0c3f556a 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
-@@ -194,6 +194,10 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
+@@ -186,6 +186,10 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
              self.saved_become_user = username
          return result
  
@@ -65,7 +65,7 @@ index 0a281a9b..0fda376f 100644
  
  class Client(bb.asyncrpc.Client):
      def __init__(self, username=None, password=None):
-@@ -222,6 +226,7 @@ class Client(bb.asyncrpc.Client):
+@@ -214,6 +218,7 @@ class Client(bb.asyncrpc.Client):
              "new_user",
              "delete_user",
              "become_user",
@@ -74,7 +74,7 @@ index 0a281a9b..0fda376f 100644
  
      def _get_async_client(self):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 7bac7ab3..0e36d13c 100644
+index d506088e..4fec1556 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -249,6 +249,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
@@ -126,10 +126,29 @@ index bfd8a844..818b5195 100644
 +
 +        return usage
 diff --git a/lib/hashserv/sqlite.py b/lib/hashserv/sqlite.py
-index 414ee8ff..e9ef38a1 100644
+index 414ee8ff..dfdccbba 100644
 --- a/lib/hashserv/sqlite.py
 +++ b/lib/hashserv/sqlite.py
-@@ -362,3 +362,23 @@ class Database(object):
+@@ -120,6 +120,18 @@ class Database(object):
+         self.db = sqlite3.connect(self.dbname)
+         self.db.row_factory = sqlite3.Row
+ 
++        with closing(self.db.cursor()) as cursor:
++            cursor.execute("SELECT sqlite_version()")
++
++            version = []
++            for v in cursor.fetchone()[0].split("."):
++                try:
++                    version.append(int(v))
++                except ValueError:
++                    version.append(v)
++
++            self.sqlite_version = tuple(version)
++
+     async def __aenter__(self):
+         return self
+ 
+@@ -362,3 +374,28 @@ class Database(object):
              )
              self.db.commit()
              return cursor.rowcount != 0
@@ -137,9 +156,14 @@ index 414ee8ff..e9ef38a1 100644
 +    async def get_usage(self):
 +        usage = {}
 +        with closing(self.db.cursor()) as cursor:
++            if self.sqlite_version >= (3, 33):
++                table_name = "sqlite_schema"
++            else:
++                table_name = "sqlite_master"
++
 +            cursor.execute(
-+                """
-+                SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
++                f"""
++                SELECT name FROM {table_name} WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
 +                """
 +            )
 +            for row in cursor.fetchall():

@@ -1,7 +1,7 @@
-From 1d826c09d2b483e166e8a9806b27c36d93461632 Mon Sep 17 00:00:00 2001
+From 9dc6f177702ca238c36418a955cfbb06260317c2 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:22 -0600
-Subject: [PATCH 11/21] asyncrpc: Add InvokeError
+Subject: [PATCH 10/22] asyncrpc: Add InvokeError
 
 Adds support for Invocation Errors (that is, errors raised by the actual
 RPC call instead of at the protocol level) to propagate across the
@@ -14,8 +14,8 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  lib/bb/asyncrpc/__init__.py   |  1 +
  lib/bb/asyncrpc/client.py     | 10 ++++++++--
  lib/bb/asyncrpc/exceptions.py |  4 ++++
- lib/bb/asyncrpc/serv.py       |  9 +++++++--
- 4 files changed, 20 insertions(+), 4 deletions(-)
+ lib/bb/asyncrpc/serv.py       | 11 +++++++++--
+ 4 files changed, 22 insertions(+), 4 deletions(-)
 
 diff --git a/lib/bb/asyncrpc/__init__.py b/lib/bb/asyncrpc/__init__.py
 index 9f677eac..a4371643 100644
@@ -76,7 +76,7 @@ index a8942b4f..ae1043a3 100644
      pass
  
 diff --git a/lib/bb/asyncrpc/serv.py b/lib/bb/asyncrpc/serv.py
-index 7569ad6c..2d2a98d4 100644
+index a476cacd..fccbb196 100644
 --- a/lib/bb/asyncrpc/serv.py
 +++ b/lib/bb/asyncrpc/serv.py
 @@ -14,7 +14,7 @@ import sys
@@ -88,7 +88,7 @@ index 7569ad6c..2d2a98d4 100644
  
  
  class ClientLoggerAdapter(logging.LoggerAdapter):
-@@ -71,7 +71,12 @@ class AsyncServerConnection(object):
+@@ -72,7 +72,14 @@ class AsyncServerConnection(object):
                  d = await self.socket.recv_message()
                  if d is None:
                      break
@@ -96,7 +96,9 @@ index 7569ad6c..2d2a98d4 100644
 +                try:
 +                    response = await self.dispatch_message(d)
 +                except InvokeError as e:
-+                    await self.socket.send_message({"invoke-error": {"message": str(e)}})
++                    await self.socket.send_message(
++                        {"invoke-error": {"message": str(e)}}
++                    )
 +                    break
 +
                  await self.socket.send_message(response)

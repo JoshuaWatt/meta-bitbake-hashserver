@@ -1,7 +1,7 @@
-From 9715da4b455f39b81d8ad0ed8315a67ae045524f Mon Sep 17 00:00:00 2001
+From 0409eb469581a2bf080cc6c7ebc128681cf89a72 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Mon, 16 Oct 2023 10:47:07 -0600
-Subject: [PATCH 20/21] bitbake-hashserver: Allow anonymous permissions to be
+Subject: [PATCH 19/22] bitbake-hashserver: Allow anonymous permissions to be
  space separated
 
 Space separation is more natural when setting the value from an

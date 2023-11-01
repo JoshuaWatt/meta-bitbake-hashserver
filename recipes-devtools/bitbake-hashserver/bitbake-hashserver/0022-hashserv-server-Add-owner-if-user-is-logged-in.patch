@@ -1,0 +1,51 @@
+From d952d31df8d5c2210ae29258e9b03c6479a78c0c Mon Sep 17 00:00:00 2001
+From: Joshua Watt <JPEWhacker@gmail.com>
+Date: Tue, 17 Oct 2023 11:07:25 -0600
+Subject: [PATCH 22/22] hashserv: server: Add owner if user is logged in
+
+If a user is authenticated with the server, report them as the owner of
+a report
+
+Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
+---
+ lib/hashserv/server.py | 3 +++
+ lib/hashserv/tests.py  | 9 +++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
+index 6da56df7..a9714b5b 100644
+--- a/lib/hashserv/server.py
++++ b/lib/hashserv/server.py
+@@ -474,6 +474,9 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+             if k in data:
+                 outhash_data[k] = data[k]
+ 
++        if self.user:
++            outhash_data["owner"] = self.user.username
++
+         # Insert the new entry, unless it already exists
+         if await self.db.insert_outhash(outhash_data):
+             # If this row is new, check if it is equivalent to another
+diff --git a/lib/hashserv/tests.py b/lib/hashserv/tests.py
+index f0be8679..a9e6fdf9 100644
+--- a/lib/hashserv/tests.py
++++ b/lib/hashserv/tests.py
+@@ -828,6 +828,15 @@ class HashEquivalenceCommonTests(object):
+         for col in columns:
+             self.client.remove({col: ""})
+ 
++    def test_auth_is_owner(self):
++        admin_client = self.start_auth_server()
++
++        user = self.create_user("test-user", ["@read", "@report"])
++        with self.auth_client(user) as client:
++            taskhash, outhash, unihash = self.create_test_hash(client)
++            data = client.get_taskhash(self.METHOD, taskhash, True)
++            self.assertEqual(data["owner"], user["username"])
++
+ 
+ class TestHashEquivalenceClient(HashEquivalenceTestSetup, unittest.TestCase):
+     def get_server_addr(self, server_idx):
+-- 
+2.34.1
+

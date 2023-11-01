@@ -173,6 +173,9 @@ jobs:
       - create-layer-cache
       - validate-layers
 
+    env:
+      IMAGES: "bitbake-hashserver bitbake-hashserver-test bitbake-hashclient bitbake-hashserver-web-ui"
+
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -230,19 +233,15 @@ jobs:
           OCI_IMAGE_LABELS:append = " org.opencontainers.image.source='${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}'"
           HEREDOC
 
-          bitbake \
-            bitbake-hashserver-container-image \
-            bitbake-hashserver-test-container-image \
-            bitbake-hashclient-container-image \
-            bitbake-hashserver-web-ui-container-image
+          bitbake $(for i in $IMAGES; do echo $i-container-image; done)
 
       - name: Copy build artifacts
         run: |
-          for IMAGE_NAME in bitbake-hashserver bitbake-hashserver-test bitbake-hashclient bitbake-hashserver-web-ui; do
-            cp -L build/tmp-glibc/deploy/images/$MACHINE/$IMAGE_NAME-container-image-$MACHINE.rootfs-*-oci.tar \
-              ./$IMAGE_NAME-${CONTAINER_ARCH}-oci.tar
-            cp -L build/tmp-glibc/deploy/images/$MACHINE/$IMAGE_NAME-container-image-$MACHINE.rootfs.spdx.tar.zst \
-              ./$IMAGE_NAME-${CONTAINER_ARCH}-spdx.tar.zst
+          for i in $IMAGES; do
+            cp -L build/tmp-glibc/deploy/images/$MACHINE/$i-container-image-$i-container-image_latest-oci.tar \
+              ./$i-${CONTAINER_ARCH}-oci.tar
+            cp -L build/tmp-glibc/deploy/images/$MACHINE/$i-container-image-$MACHINE.rootfs.spdx.tar.zst \
+              ./$i-${CONTAINER_ARCH}-spdx.tar.zst
           done
 
       # Can't run this yet because its not correctly set by meta-virt for x86_64

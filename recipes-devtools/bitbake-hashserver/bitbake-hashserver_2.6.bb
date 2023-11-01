@@ -16,19 +16,20 @@ SRC_URI = "git://git.openembedded.org/bitbake;protocol=https;branch=${BRANCH} \
            file://0006-bitbake-hashserv-Allow-arguments-from-environment.patch \
            file://0007-hashserv-Abstract-database.patch \
            file://0008-hashserv-Add-SQLalchemy-backend.patch \
-           file://0009-contrib-Update-hashserv-Dockerfile.patch \
-           file://0010-hashserv-Implement-read-only-version-of-report-RPC.patch \
-           file://0011-asyncrpc-Add-InvokeError.patch \
-           file://0012-asyncrpc-client-Prevent-double-closing-of-loop.patch \
-           file://0013-asyncrpc-client-Add-disconnect-API.patch \
-           file://0014-hashserv-Add-user-permissions.patch \
-           file://0015-hashserv-Add-become-user-API.patch \
-           file://0016-hashserv-Add-db-usage-API.patch \
-           file://0017-hashserv-Add-database-column-query-API.patch \
-           file://0018-hashserv-test-Add-bitbake-hashclient-tests.patch \
-           file://0019-bitbake-hashclient-Output-stats-in-JSON-format.patch \
-           file://0020-bitbake-hashserver-Allow-anonymous-permissions-to-be.patch \
-           file://0021-hashserv-tests-Allow-authentication-for-external-ser.patch \
+           file://0009-hashserv-Implement-read-only-version-of-report-RPC.patch \
+           file://0010-asyncrpc-Add-InvokeError.patch \
+           file://0011-asyncrpc-client-Prevent-double-closing-of-loop.patch \
+           file://0012-asyncrpc-client-Add-disconnect-API.patch \
+           file://0013-hashserv-Add-user-permissions.patch \
+           file://0014-hashserv-Add-become-user-API.patch \
+           file://0015-hashserv-Add-db-usage-API.patch \
+           file://0016-hashserv-Add-database-column-query-API.patch \
+           file://0017-hashserv-test-Add-bitbake-hashclient-tests.patch \
+           file://0018-bitbake-hashclient-Output-stats-in-JSON-format.patch \
+           file://0019-bitbake-hashserver-Allow-anonymous-permissions-to-be.patch \
+           file://0020-hashserv-tests-Allow-authentication-for-external-ser.patch \
+           file://0021-hashserv-Allow-self-service-deletion.patch \
+           file://0022-hashserv-server-Add-owner-if-user-is-logged-in.patch \
            "
 BRANCH = "2.6"
 SRCREV = "05051152cc42acc52bcf9af9a696f632fac4307f"

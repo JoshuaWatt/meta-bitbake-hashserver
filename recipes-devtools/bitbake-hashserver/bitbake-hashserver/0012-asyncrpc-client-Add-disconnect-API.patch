@@ -1,7 +1,7 @@
-From 243e94b1cab5a3468ad392a867192ba0166e664f Mon Sep 17 00:00:00 2001
+From c5cd650edbd68c20ea700e491e2613ccfdb4a4f3 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:29:40 -0600
-Subject: [PATCH 13/21] asyncrpc: client: Add disconnect API
+Subject: [PATCH 12/22] asyncrpc: client: Add disconnect API
 
 Adds an API to explicitly disconnect a client. This can be useful for
 testing the auto-reconnect behavior of clients

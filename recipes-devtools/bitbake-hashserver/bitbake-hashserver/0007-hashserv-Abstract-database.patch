@@ -1,7 +1,7 @@
-From efed3bff286f7f25e0046be5813f76134d74526d Mon Sep 17 00:00:00 2001
+From 2dcd66cbfdcfd97f9b396e00edcfee18dcabfb02 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:11 -0600
-Subject: [PATCH 07/21] hashserv: Abstract database
+Subject: [PATCH 07/22] hashserv: Abstract database
 
 Abstracts the way the database backend is accessed by the hash
 equivalence server to make it possible to use other backends
@@ -153,7 +153,7 @@ index 56b9c6bc..90d8cff1 100644
  
      (typ, a) = parse_address(addr)
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 5ba22c07..f8ea649a 100644
+index 928532c7..12255cc2 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -3,18 +3,16 @@
@@ -474,7 +474,7 @@ index 5ba22c07..f8ea649a 100644
 +        await self.db.insert_outhash(data)
  
      async def handle_get_stream(self, request):
-         await self.socket.send("ok")
+         await self.socket.send_message("ok")
 @@ -347,20 +252,16 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
                  request_measure = self.request_sample.measure()
                  request_measure.start()

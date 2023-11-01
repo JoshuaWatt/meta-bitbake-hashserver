@@ -1,7 +1,7 @@
-From 9c98d102f4f3daf6b7bb645dbf7adf969e58dcf9 Mon Sep 17 00:00:00 2001
+From 5ba76aa190067c04a4e063f0f8ae1b6838620253 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Mon, 16 Oct 2023 13:12:56 -0600
-Subject: [PATCH 21/21] hashserv: tests: Allow authentication for external
+Subject: [PATCH 20/22] hashserv: tests: Allow authentication for external
  server tests
 
 If BB_TEST_HASHSERV_USERNAME and BB_TEST_HASHSERV_PASSWORD are provided

@@ -1,7 +1,7 @@
-From b9e51f15050b1143ffba250d4640ad34ba9b673f Mon Sep 17 00:00:00 2001
+From c593b6db063ee1488be2c5e1b70efb7c076b222e Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 27 Sep 2023 15:30:30 -0600
-Subject: [PATCH 02/21] hashserv: Add websocket connection implementation
+Subject: [PATCH 02/22] hashserv: Add websocket connection implementation
 
 Adds support to the hash equivalence client and server to communicate
 over websockets. Since websockets are message orientated instead of
@@ -238,10 +238,10 @@ index 3a401835..56b9c6bc 100644
          await c.connect_tcp(*a)
  
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index b3eabda6..61c72cc9 100644
+index ebf1c361..ebb58f33 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
-@@ -119,6 +119,7 @@ class Client(bb.asyncrpc.Client):
+@@ -115,6 +115,7 @@ class Client(bb.asyncrpc.Client):
          super().__init__()
          self._add_methods(
              "connect_tcp",

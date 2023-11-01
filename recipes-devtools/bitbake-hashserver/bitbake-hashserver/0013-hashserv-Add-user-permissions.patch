@@ -1,7 +1,7 @@
-From 6cda98c1b7a3ed54afd856294215305ae476fa2c Mon Sep 17 00:00:00 2001
+From e4d88478ff3fccd8077a7a8f444032f0eb081214 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:26 -0600
-Subject: [PATCH 14/21] hashserv: Add user permissions
+Subject: [PATCH 13/22] hashserv: Add user permissions
 
 Adds support for the hashserver to have per-user permissions. User
 management is done via a new "auth" RPC API where a client can
@@ -33,12 +33,12 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  bin/bitbake-hashclient     |  84 ++++++++-
  bin/bitbake-hashserv       |  37 ++++
  lib/hashserv/__init__.py   |  69 ++++---
- lib/hashserv/client.py     |  66 ++++++-
+ lib/hashserv/client.py     |  62 ++++++-
  lib/hashserv/server.py     | 357 ++++++++++++++++++++++++++++++++++++-
  lib/hashserv/sqlalchemy.py | 111 +++++++++++-
  lib/hashserv/sqlite.py     | 105 +++++++++++
  lib/hashserv/tests.py      | 276 +++++++++++++++++++++++++++-
- 8 files changed, 1058 insertions(+), 47 deletions(-)
+ 8 files changed, 1054 insertions(+), 47 deletions(-)
 
 diff --git a/bin/bitbake-hashclient b/bin/bitbake-hashclient
 index a02a65b9..328c15cd 100755
@@ -363,7 +363,7 @@ index 9a8ee4e8..552a3327 100644
 +        await c.close()
 +        raise e
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index 61c72cc9..6b2bf54d 100644
+index ebb58f33..5ed8d381 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
 @@ -6,6 +6,7 @@
@@ -395,23 +395,15 @@ index 61c72cc9..6b2bf54d 100644
  
      async def send_stream(self, msg):
          async def proc():
-@@ -45,10 +50,15 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
+@@ -41,6 +46,7 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
          if new_mode == self.MODE_NORMAL and self.mode == self.MODE_GET_STREAM:
              r = await self._send_wrapper(stream_to_normal)
              if r != "ok":
 +                self.check_invoke_error(r)
-                 raise ConnectionError("Bad response from server %r" % r)
+                 raise ConnectionError("Unable to transition to normal mode: Bad response from server %r" % r)
          elif new_mode == self.MODE_GET_STREAM and self.mode == self.MODE_NORMAL:
-             r = await self._send_wrapper(normal_to_stream)
-             if r != "ok":
-+                try:
-+                    self.check_invoke_error(json.loads(r))
-+                except json.JSONDecodeError:
-+                    pass
-                 raise ConnectionError("Bad response from server %r" % r)
-         elif new_mode != self.mode:
-             raise Exception(
-@@ -113,9 +123,52 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
+             r = await self.invoke({"get-stream": None})
+@@ -109,9 +115,52 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
          await self._set_mode(self.MODE_NORMAL)
          return await self.invoke({"clean-unused": {"max_age_seconds": max_age}})
  
@@ -465,7 +457,7 @@ index 61c72cc9..6b2bf54d 100644
          super().__init__()
          self._add_methods(
              "connect_tcp",
-@@ -130,7 +183,14 @@ class Client(bb.asyncrpc.Client):
+@@ -126,7 +175,14 @@ class Client(bb.asyncrpc.Client):
              "backfill_wait",
              "remove",
              "clean_unused",
@@ -482,7 +474,7 @@ index 61c72cc9..6b2bf54d 100644
 -        return AsyncClient()
 +        return AsyncClient(self.username, self.password)
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 1299558e..00ca1124 100644
+index 2e6977cb..5c70d81f 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -8,13 +8,48 @@ import asyncio
@@ -707,7 +699,7 @@ index 1299558e..00ca1124 100644
  
 +    @permissions(READ_PERM)
      async def handle_get_stream(self, request):
-         await self.socket.send("ok")
+         await self.socket.send_message("ok")
  
 @@ -303,8 +453,11 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
              "unihash": unihash,

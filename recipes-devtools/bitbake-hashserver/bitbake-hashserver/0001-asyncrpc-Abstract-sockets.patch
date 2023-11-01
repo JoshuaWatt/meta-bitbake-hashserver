@@ -1,7 +1,7 @@
-From 417c92bd2e7f540ac99044e767afe95f94474345 Mon Sep 17 00:00:00 2001
+From 68491911ee25dcbf44a371fdc1d1e354c87e88b0 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Tue, 26 Sep 2023 12:08:43 -0600
-Subject: [PATCH 01/21] asyncrpc: Abstract sockets
+Subject: [PATCH 01/22] asyncrpc: Abstract sockets
 
 Rewrites the asyncrpc client and server code to make it possible to have
 other transport backends that are not stream based (e.g. websockets
@@ -17,11 +17,11 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  lib/bb/asyncrpc/exceptions.py |  17 ++
  lib/bb/asyncrpc/serv.py       | 298 +++++++++++++++++-----------------
  lib/hashserv/__init__.py      |  21 ---
- lib/hashserv/client.py        |  38 +++--
+ lib/hashserv/client.py        |  38 ++---
  lib/hashserv/server.py        | 115 ++++++-------
  lib/prserv/client.py          |   8 +-
  lib/prserv/serv.py            |  31 ++--
- 10 files changed, 382 insertions(+), 351 deletions(-)
+ 10 files changed, 380 insertions(+), 353 deletions(-)
  create mode 100644 lib/bb/asyncrpc/connection.py
  create mode 100644 lib/bb/asyncrpc/exceptions.py
 
@@ -788,10 +788,10 @@ index 9cb3fd57..3a401835 100644
      from . import server
      db = setup_database(dbname, sync=sync)
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index f676d267..b3eabda6 100644
+index f676d267..ebf1c361 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
-@@ -28,22 +28,26 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
+@@ -28,24 +28,24 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
  
      async def send_stream(self, msg):
          async def proc():
@@ -811,22 +811,22 @@ index f676d267..b3eabda6 100644
 +            await self.socket.send("END")
 +            return await self.socket.recv_message()
 +
-+        async def normal_to_stream():
-+            await self.socket.send_message({"get-stream": None})
-+            return await self.socket.recv()
-+
          if new_mode == self.MODE_NORMAL and self.mode == self.MODE_GET_STREAM:
 -            r = await self.send_stream("END")
 +            r = await self._send_wrapper(stream_to_normal)
              if r != "ok":
-                 raise ConnectionError("Bad response from server %r" % r)
+-                raise ConnectionError("Bad response from server %r" % r)
++                raise ConnectionError("Unable to transition to normal mode: Bad response from server %r" % r)
          elif new_mode == self.MODE_GET_STREAM and self.mode == self.MODE_NORMAL:
 -            r = await self.send_message({"get-stream": None})
-+            r = await self._send_wrapper(normal_to_stream)
++            r = await self.invoke({"get-stream": None})
              if r != "ok":
-                 raise ConnectionError("Bad response from server %r" % r)
+-                raise ConnectionError("Bad response from server %r" % r)
++                raise ConnectionError("Unable to transition to stream mode: Bad response from server %r" % r)
          elif new_mode != self.mode:
-@@ -67,7 +71,7 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
+             raise Exception(
+                 "Undefined mode transition %r -> %r" % (self.mode, new_mode)
+@@ -67,7 +67,7 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
          m["method"] = method
          m["outhash"] = outhash
          m["unihash"] = unihash
@@ -835,7 +835,7 @@ index f676d267..b3eabda6 100644
  
      async def report_unihash_equiv(self, taskhash, method, unihash, extra={}):
          await self._set_mode(self.MODE_NORMAL)
-@@ -75,39 +79,39 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
+@@ -75,39 +75,39 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
          m["taskhash"] = taskhash
          m["method"] = method
          m["unihash"] = unihash
@@ -884,7 +884,7 @@ index f676d267..b3eabda6 100644
  
  class Client(bb.asyncrpc.Client):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 45bf476b..b0bd63c5 100644
+index 45bf476b..6d3a4751 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -165,8 +165,8 @@ class ServerCursor(object):
@@ -940,7 +940,7 @@ index 45bf476b..b0bd63c5 100644
  
      async def handle_get_stream(self, request):
 -        self.write_message('ok')
-+        await self.socket.send("ok")
++        await self.socket.send_message("ok")
  
          while True:
              upstream = None

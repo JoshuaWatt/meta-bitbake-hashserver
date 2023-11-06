@@ -3,13 +3,13 @@
         "core": {
             "git-remote": {
                 "branch": "master",
-                "describe": "uninative-4.3-428-g7d77bce615",
+                "describe": "uninative-4.3-742-g8b56191077",
                 "remotes": {
                     "origin": {
                         "uri": "https://git.openembedded.org/openembedded-core"
                     }
                 },
-                "rev": "7d77bce6158bf11a2de0944f75589382f153bb91"
+                "rev": "8b56191077ffb7f33061d95c350244e9346a1fb0"
             },
             "path": "core"
         },
@@ -36,7 +36,7 @@
                         "uri": "https://git.openembedded.org/meta-openembedded"
                     }
                 },
-                "rev": "ea42cec2ec7ccb66c46cced255f752b8e5b15c2d"
+                "rev": "1b0154df7743a5291a65ff891ad3ecc35661dc9f"
             },
             "path": "meta-openembedded"
         },
@@ -49,7 +49,7 @@
                         "uri": "https://git.yoctoproject.org/meta-virtualization"
                     }
                 },
-                "rev": "827092c2ec925ea3a024dcda9ccfd738e351e6ba"
+                "rev": "f7bffb351c59cc972d9141ac2ab5ee2c40e19547"
             },
             "path": "meta-virtualization"
         }

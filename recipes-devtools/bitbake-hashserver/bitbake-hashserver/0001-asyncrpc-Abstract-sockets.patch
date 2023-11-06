@@ -1,4 +1,4 @@
-From 68491911ee25dcbf44a371fdc1d1e354c87e88b0 Mon Sep 17 00:00:00 2001
+From 5e0a524ab9fdf9285f3dc8b6cdb8798c7cb06786 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Tue, 26 Sep 2023 12:08:43 -0600
 Subject: [PATCH 01/22] asyncrpc: Abstract sockets
@@ -15,13 +15,13 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  lib/bb/asyncrpc/client.py     |  78 +++------
  lib/bb/asyncrpc/connection.py |  95 +++++++++++
  lib/bb/asyncrpc/exceptions.py |  17 ++
- lib/bb/asyncrpc/serv.py       | 298 +++++++++++++++++-----------------
+ lib/bb/asyncrpc/serv.py       | 304 +++++++++++++++++-----------------
  lib/hashserv/__init__.py      |  21 ---
  lib/hashserv/client.py        |  38 ++---
- lib/hashserv/server.py        | 115 ++++++-------
+ lib/hashserv/server.py        | 116 ++++++-------
  lib/prserv/client.py          |   8 +-
  lib/prserv/serv.py            |  31 ++--
- 10 files changed, 380 insertions(+), 353 deletions(-)
+ 10 files changed, 387 insertions(+), 353 deletions(-)
  create mode 100644 lib/bb/asyncrpc/connection.py
  create mode 100644 lib/bb/asyncrpc/exceptions.py
 
@@ -334,10 +334,10 @@ index 00000000..a8942b4f
 +class ConnectionClosedError(Exception):
 +    pass
 diff --git a/lib/bb/asyncrpc/serv.py b/lib/bb/asyncrpc/serv.py
-index d2de4891..8d4da1e2 100644
+index d2de4891..3e0d0632 100644
 --- a/lib/bb/asyncrpc/serv.py
 +++ b/lib/bb/asyncrpc/serv.py
-@@ -12,241 +12,242 @@ import signal
+@@ -12,241 +12,248 @@ import signal
  import socket
  import sys
  import multiprocessing
@@ -358,6 +358,10 @@ index d2de4891..8d4da1e2 100644
 -    def __init__(self, reader, writer, proto_name, logger):
 -        self.reader = reader
 -        self.writer = writer
++    # If a handler returns this object (e.g. `return self.NO_RESPONSE`), no
++    # return message will be automatically be sent back to the client
++    NO_RESPONSE = object()
++
 +    def __init__(self, socket, proto_name, logger):
 +        self.socket = socket
          self.proto_name = proto_name
@@ -423,7 +427,9 @@ index d2de4891..8d4da1e2 100644
 -                await self.writer.drain()
 -        except ClientError as e:
 +                response = await self.dispatch_message(d)
-+                await self.socket.send_message(response)
++                if response is not self.NO_RESPONSE:
++                    await self.socket.send_message(response)
++
 +        except ConnectionClosedError as e:
 +            self.logger.info(str(e))
 +        except (ClientError, ConnectionError) as e:
@@ -625,7 +631,8 @@ index d2de4891..8d4da1e2 100644
 -                os.chdir(cwd)
 -
 -            self.logger.debug('Listening on %r' % path)
--
++        self.server = UnixStreamServer(path, self._client_handler, self.logger)
+ 
 -            self._cleanup_socket = cleanup
 -            self.address = "unix://%s" % os.path.abspath(path)
 -
@@ -634,8 +641,7 @@ index d2de4891..8d4da1e2 100644
 -    @abc.abstractmethod
 -    def accept_client(self, reader, writer):
 -        pass
-+        self.server = UnixStreamServer(path, self._client_handler, self.logger)
- 
+-
 -    async def handle_client(self, reader, writer):
 -        # writer.transport.set_write_buffer_limits(0)
 +    async def _client_handler(self, socket):
@@ -724,7 +730,7 @@ index d2de4891..8d4da1e2 100644
          def run(queue):
              # Create loop and override any loop that may have existed
              # in a parent process.  Without doing this and instead
-@@ -259,18 +260,19 @@ class AsyncServer(object):
+@@ -259,18 +266,19 @@ class AsyncServer(object):
              # more general, though, as any potential use of asyncio in
              # Cooker could create a loop that needs to replaced in this
              # new process.
@@ -788,7 +794,7 @@ index 9cb3fd57..3a401835 100644
      from . import server
      db = setup_database(dbname, sync=sync)
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index f676d267..ebf1c361 100644
+index f676d267..5f7d22ab 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
 @@ -28,24 +28,24 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
@@ -809,7 +815,7 @@ index f676d267..ebf1c361 100644
      async def _set_mode(self, new_mode):
 +        async def stream_to_normal():
 +            await self.socket.send("END")
-+            return await self.socket.recv_message()
++            return await self.socket.recv()
 +
          if new_mode == self.MODE_NORMAL and self.mode == self.MODE_GET_STREAM:
 -            r = await self.send_stream("END")
@@ -884,7 +890,7 @@ index f676d267..ebf1c361 100644
  
  class Client(bb.asyncrpc.Client):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 45bf476b..6d3a4751 100644
+index 45bf476b..13b75480 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -165,8 +165,8 @@ class ServerCursor(object):
@@ -965,7 +971,7 @@ index 45bf476b..6d3a4751 100644
  
                  (method, taskhash) = l.split()
                  #logger.debug('Looking up %s %s' % (method, taskhash))
-@@ -366,29 +359,29 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -366,29 +359,30 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
                      cursor.close()
  
                  if row is not None:
@@ -997,12 +1003,13 @@ index 45bf476b..6d3a4751 100644
              if upstream is not None:
                  await self.backfill_queue.put((method, taskhash))
  
-+        return "ok"
++        await self.socket.send("ok")
++        return self.NO_RESPONSE
 +
      async def handle_report(self, data):
          with closing(self.db.cursor()) as cursor:
              outhash_data = {
-@@ -468,7 +461,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -468,7 +462,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
                  'unihash': unihash,
              }
  
@@ -1011,7 +1018,7 @@ index 45bf476b..6d3a4751 100644
  
      async def handle_equivreport(self, data):
          with closing(self.db.cursor()) as cursor:
-@@ -491,30 +484,28 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -491,30 +485,28 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
              d = {k: row[k] for k in ('taskhash', 'method', 'unihash')}
  
@@ -1046,7 +1053,7 @@ index 45bf476b..6d3a4751 100644
  
      async def handle_remove(self, request):
          condition = request["where"]
-@@ -541,7 +532,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -541,7 +533,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
              count += do_remove(UNIHASH_TABLE_COLUMNS, "unihashes_v2", cursor)
              self.db.commit()
  
@@ -1055,7 +1062,7 @@ index 45bf476b..6d3a4751 100644
  
      async def handle_clean_unused(self, request):
          max_age = request["max_age_seconds"]
-@@ -558,7 +549,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -558,7 +550,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
              )
              count = cursor.rowcount
  
@@ -1064,7 +1071,7 @@ index 45bf476b..6d3a4751 100644
  
      def query_equivalent(self, cursor, method, taskhash):
          # This is part of the inner loop and must be as fast as possible
-@@ -583,41 +574,33 @@ class Server(bb.asyncrpc.AsyncServer):
+@@ -583,41 +575,33 @@ class Server(bb.asyncrpc.AsyncServer):
          self.db = db
          self.upstream = upstream
          self.read_only = read_only

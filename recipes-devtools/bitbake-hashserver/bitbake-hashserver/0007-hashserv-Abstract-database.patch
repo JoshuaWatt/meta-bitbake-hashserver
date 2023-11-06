@@ -1,4 +1,4 @@
-From 2dcd66cbfdcfd97f9b396e00edcfee18dcabfb02 Mon Sep 17 00:00:00 2001
+From 04aacad53837758be999a68245da720bb5f350b9 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:11 -0600
 Subject: [PATCH 07/22] hashserv: Abstract database
@@ -153,7 +153,7 @@ index 56b9c6bc..90d8cff1 100644
  
      (typ, a) = parse_address(addr)
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 928532c7..12255cc2 100644
+index e6a3f405..84cf4f22 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -3,18 +3,16 @@
@@ -501,8 +501,8 @@ index 928532c7..12255cc2 100644
                  elif self.upstream_client is not None:
                      upstream = await self.upstream_client.get_unihash(method, taskhash)
                      if upstream:
-@@ -383,118 +284,81 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
-         return "ok"
+@@ -384,118 +285,81 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+         return self.NO_RESPONSE
  
      async def handle_report(self, data):
 -        with closing(self.db.cursor()) as cursor:
@@ -681,7 +681,7 @@ index 928532c7..12255cc2 100644
          }
  
          self.request_stats.reset()
-@@ -502,7 +366,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -503,7 +367,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
      async def handle_backfill_wait(self, request):
          d = {
@@ -690,7 +690,7 @@ index 928532c7..12255cc2 100644
          }
          await self.backfill_queue.join()
          return d
-@@ -512,92 +376,63 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -513,92 +377,63 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          if not isinstance(condition, dict):
              raise TypeError("Bad condition type %s" % type(condition))
  

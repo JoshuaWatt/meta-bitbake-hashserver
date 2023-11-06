@@ -1,4 +1,4 @@
-From e4d88478ff3fccd8077a7a8f444032f0eb081214 Mon Sep 17 00:00:00 2001
+From 6bc3b69f2a59a99dc78c7f67c9caa09cb98827f8 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:26 -0600
 Subject: [PATCH 13/22] hashserv: Add user permissions
@@ -363,7 +363,7 @@ index 9a8ee4e8..552a3327 100644
 +        await c.close()
 +        raise e
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index ebb58f33..5ed8d381 100644
+index 9542d72f..82400fe5 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
 @@ -6,6 +6,7 @@
@@ -474,7 +474,7 @@ index ebb58f33..5ed8d381 100644
 -        return AsyncClient()
 +        return AsyncClient(self.username, self.password)
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 2e6977cb..5c70d81f 100644
+index c691df76..f5baa6be 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -8,13 +8,48 @@ import asyncio
@@ -701,7 +701,7 @@ index 2e6977cb..5c70d81f 100644
      async def handle_get_stream(self, request):
          await self.socket.send_message("ok")
  
-@@ -303,8 +453,11 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -304,8 +454,11 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
              "unihash": unihash,
          }
  
@@ -714,7 +714,7 @@ index 2e6977cb..5c70d81f 100644
              return await self.report_readonly(data)
  
          outhash_data = {
-@@ -357,6 +510,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -358,6 +511,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
              "unihash": unihash,
          }
  
@@ -722,7 +722,7 @@ index 2e6977cb..5c70d81f 100644
      async def handle_equivreport(self, data):
          await self.db.insert_unihash(data["method"], data["taskhash"], data["unihash"])
  
-@@ -374,11 +528,13 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -375,11 +529,13 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
          return {k: row[k] for k in ("taskhash", "method", "unihash")}
  
@@ -736,7 +736,7 @@ index 2e6977cb..5c70d81f 100644
      async def handle_reset_stats(self, request):
          d = {
              "requests": self.request_stats.todict(),
-@@ -387,6 +543,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -388,6 +544,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          self.request_stats.reset()
          return d
  
@@ -744,7 +744,7 @@ index 2e6977cb..5c70d81f 100644
      async def handle_backfill_wait(self, request):
          d = {
              "tasks": self.backfill_queue.qsize(),
-@@ -394,6 +551,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -395,6 +552,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
          await self.backfill_queue.join()
          return d
  
@@ -752,7 +752,7 @@ index 2e6977cb..5c70d81f 100644
      async def handle_remove(self, request):
          condition = request["where"]
          if not isinstance(condition, dict):
-@@ -401,19 +559,178 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -402,19 +560,178 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
          return {"count": await self.db.remove(condition)}
  
@@ -932,7 +932,7 @@ index 2e6977cb..5c70d81f 100644
          super().__init__(logger)
  
          self.request_stats = Stats()
-@@ -421,6 +738,13 @@ class Server(bb.asyncrpc.AsyncServer):
+@@ -422,6 +739,13 @@ class Server(bb.asyncrpc.AsyncServer):
          self.upstream = upstream
          self.read_only = read_only
          self.backfill_queue = None
@@ -946,7 +946,7 @@ index 2e6977cb..5c70d81f 100644
  
      def accept_client(self, socket):
          return ServerClient(
-@@ -430,12 +754,34 @@ class Server(bb.asyncrpc.AsyncServer):
+@@ -431,12 +755,34 @@ class Server(bb.asyncrpc.AsyncServer):
              self.backfill_queue,
              self.upstream,
              self.read_only,
@@ -982,7 +982,7 @@ index 2e6977cb..5c70d81f 100644
              while True:
                  item = await self.backfill_queue.get()
                  if item is None:
-@@ -456,6 +802,9 @@ class Server(bb.asyncrpc.AsyncServer):
+@@ -457,6 +803,9 @@ class Server(bb.asyncrpc.AsyncServer):
  
          self.loop.run_until_complete(self.db_engine.create())
  

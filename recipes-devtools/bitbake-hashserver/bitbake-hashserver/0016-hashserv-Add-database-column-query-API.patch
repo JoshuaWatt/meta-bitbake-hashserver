@@ -1,4 +1,4 @@
-From 3ff3978a06c2088f6f564e37f34a7f62acc5f1fb Mon Sep 17 00:00:00 2001
+From 7e3b6967e07c5e95f75f3cb39fbe117e2a4532ec Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Thu, 12 Oct 2023 15:19:13 -0600
 Subject: [PATCH 16/22] hashserv: Add database column query API
@@ -43,7 +43,7 @@ index 5d65c7bc..58aa02ee 100755
  
      logger = logging.getLogger('hashserv')
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index 0c3f556a..319da2d9 100644
+index 5e0a462b..35a97687 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
 @@ -190,6 +190,10 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
@@ -66,7 +66,7 @@ index 0c3f556a..319da2d9 100644
  
      def _get_async_client(self):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 4fec1556..d2fd75df 100644
+index c5b9797e..8c3d20b6 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -250,6 +250,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
@@ -77,7 +77,7 @@ index 4fec1556..d2fd75df 100644
                  # Not always read-only, but internally checks if the server is
                  # read-only
                  "report": self.handle_report,
-@@ -571,6 +572,10 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -572,6 +573,10 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
      async def handle_get_db_usage(self, request):
          return {"usage": await self.db.get_usage()}
  

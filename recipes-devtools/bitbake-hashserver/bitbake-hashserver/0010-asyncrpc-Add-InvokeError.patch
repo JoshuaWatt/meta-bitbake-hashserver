@@ -1,4 +1,4 @@
-From 9dc6f177702ca238c36418a955cfbb06260317c2 Mon Sep 17 00:00:00 2001
+From 8e7428e73812ac6900e8d634a208f08c1bf4e4e6 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:22 -0600
 Subject: [PATCH 10/22] asyncrpc: Add InvokeError
@@ -76,7 +76,7 @@ index a8942b4f..ae1043a3 100644
      pass
  
 diff --git a/lib/bb/asyncrpc/serv.py b/lib/bb/asyncrpc/serv.py
-index a476cacd..fccbb196 100644
+index c99add4d..5fed1730 100644
 --- a/lib/bb/asyncrpc/serv.py
 +++ b/lib/bb/asyncrpc/serv.py
 @@ -14,7 +14,7 @@ import sys
@@ -88,7 +88,7 @@ index a476cacd..fccbb196 100644
  
  
  class ClientLoggerAdapter(logging.LoggerAdapter):
-@@ -72,7 +72,14 @@ class AsyncServerConnection(object):
+@@ -76,7 +76,14 @@ class AsyncServerConnection(object):
                  d = await self.socket.recv_message()
                  if d is None:
                      break
@@ -101,9 +101,9 @@ index a476cacd..fccbb196 100644
 +                    )
 +                    break
 +
-                 await self.socket.send_message(response)
-         except ConnectionClosedError as e:
-             self.logger.info(str(e))
+                 if response is not self.NO_RESPONSE:
+                     await self.socket.send_message(response)
+ 
 -- 
 2.34.1
 

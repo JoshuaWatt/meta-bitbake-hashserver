@@ -1,4 +1,4 @@
-From 0409eb469581a2bf080cc6c7ebc128681cf89a72 Mon Sep 17 00:00:00 2001
+From 7f44dcbce8a827c927e4963d1c7c32658e9b3fb3 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Mon, 16 Oct 2023 10:47:07 -0600
 Subject: [PATCH 19/22] bitbake-hashserver: Allow anonymous permissions to be

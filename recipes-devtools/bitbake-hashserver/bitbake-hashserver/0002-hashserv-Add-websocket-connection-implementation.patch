@@ -1,4 +1,4 @@
-From c593b6db063ee1488be2c5e1b70efb7c076b222e Mon Sep 17 00:00:00 2001
+From b4b00b6514cb3fc0916b323d908954dcae7eafc4 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 27 Sep 2023 15:30:30 -0600
 Subject: [PATCH 02/22] hashserv: Add websocket connection implementation
@@ -103,7 +103,7 @@ index c4fd2475..a10628f7 100644
 +            await self.socket.close()
 +            self.socket = None
 diff --git a/lib/bb/asyncrpc/serv.py b/lib/bb/asyncrpc/serv.py
-index 8d4da1e2..3040ac91 100644
+index 3e0d0632..dfb03773 100644
 --- a/lib/bb/asyncrpc/serv.py
 +++ b/lib/bb/asyncrpc/serv.py
 @@ -12,7 +12,7 @@ import signal
@@ -115,7 +115,7 @@ index 8d4da1e2..3040ac91 100644
  from .exceptions import ClientError, ServerError, ConnectionClosedError
  
  
-@@ -172,6 +172,54 @@ class UnixStreamServer(StreamServer):
+@@ -178,6 +178,54 @@ class UnixStreamServer(StreamServer):
          os.unlink(self.path)
  
  
@@ -170,7 +170,7 @@ index 8d4da1e2..3040ac91 100644
  class AsyncServer(object):
      def __init__(self, logger):
          self.logger = logger
-@@ -184,6 +232,9 @@ class AsyncServer(object):
+@@ -190,6 +238,9 @@ class AsyncServer(object):
      def start_unix_server(self, path):
          self.server = UnixStreamServer(path, self._client_handler, self.logger)
  
@@ -238,7 +238,7 @@ index 3a401835..56b9c6bc 100644
          await c.connect_tcp(*a)
  
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index ebf1c361..ebb58f33 100644
+index 5f7d22ab..9542d72f 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
 @@ -115,6 +115,7 @@ class Client(bb.asyncrpc.Client):

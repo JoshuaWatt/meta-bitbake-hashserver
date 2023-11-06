@@ -1,4 +1,4 @@
-From 5ba76aa190067c04a4e063f0f8ae1b6838620253 Mon Sep 17 00:00:00 2001
+From cbef23ddc1c09ed17324469eb6e9e916333c7ea7 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Mon, 16 Oct 2023 13:12:56 -0600
 Subject: [PATCH 20/22] hashserv: tests: Allow authentication for external

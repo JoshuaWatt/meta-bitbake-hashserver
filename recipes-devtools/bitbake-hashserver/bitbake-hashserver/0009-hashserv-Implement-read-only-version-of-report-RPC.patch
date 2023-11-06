@@ -1,4 +1,4 @@
-From d8c905da8cf7649b8dcf6f3006ad9ccde5b520c7 Mon Sep 17 00:00:00 2001
+From cf99f37503958a4dc59bd10ae0003b50764727c4 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:20 -0600
 Subject: [PATCH 09/22] hashserv: Implement read-only version of "report" RPC
@@ -13,7 +13,7 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  2 files changed, 26 insertions(+), 3 deletions(-)
 
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 12255cc2..2e6977cb 100644
+index 84cf4f22..c691df76 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -124,6 +124,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
@@ -41,9 +41,9 @@ index 12255cc2..2e6977cb 100644
                      "report-equiv": self.handle_equivreport,
                      "reset-stats": self.handle_reset_stats,
                      "backfill-wait": self.handle_backfill_wait,
-@@ -283,7 +286,27 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
- 
-         return "ok"
+@@ -284,7 +287,27 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+         await self.socket.send("ok")
+         return self.NO_RESPONSE
  
 +    async def report_readonly(self, data):
 +        method = data["method"]

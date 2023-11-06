@@ -1,4 +1,4 @@
-From 99f4902f6f287acb9101bc784abc4dcc1b0e4c97 Mon Sep 17 00:00:00 2001
+From b79f9dacac2f2edfeebbe942fb22bb310945039c Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Mon, 16 Oct 2023 10:20:23 -0600
 Subject: [PATCH 18/22] bitbake-hashclient: Output stats in JSON format

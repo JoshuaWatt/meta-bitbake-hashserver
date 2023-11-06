@@ -1,4 +1,4 @@
-From 8a2be45d1cbc11677816f2eee10e76622f0e05f6 Mon Sep 17 00:00:00 2001
+From e758ffdeb9eebc2ec6aa0bbe0e1f3d5afe7c4c5b Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Fri, 29 Sep 2023 14:36:03 -0600
 Subject: [PATCH 05/22] asyncrpc: Prefix log messages with client info
@@ -13,7 +13,7 @@ Signed-off-by: Joshua Watt <JPEWhacker@gmail.com>
  2 files changed, 23 insertions(+), 8 deletions(-)
 
 diff --git a/lib/bb/asyncrpc/serv.py b/lib/bb/asyncrpc/serv.py
-index 3040ac91..a476cacd 100644
+index dfb03773..c99add4d 100644
 --- a/lib/bb/asyncrpc/serv.py
 +++ b/lib/bb/asyncrpc/serv.py
 @@ -12,10 +12,16 @@ import signal
@@ -31,9 +31,9 @@ index 3040ac91..a476cacd 100644
 +
 +
  class AsyncServerConnection(object):
-     def __init__(self, socket, proto_name, logger):
-         self.socket = socket
-@@ -23,7 +29,12 @@ class AsyncServerConnection(object):
+     # If a handler returns this object (e.g. `return self.NO_RESPONSE`), no
+     # return message will be automatically be sent back to the client
+@@ -27,7 +33,12 @@ class AsyncServerConnection(object):
          self.handlers = {
              "ping": self.handle_ping,
          }
@@ -47,7 +47,7 @@ index 3040ac91..a476cacd 100644
  
      async def close(self):
          await self.socket.close()
-@@ -236,16 +247,20 @@ class AsyncServer(object):
+@@ -242,16 +253,20 @@ class AsyncServer(object):
          self.server = WebsocketsServer(host, port, self._client_handler, self.logger)
  
      async def _client_handler(self, socket):
@@ -71,7 +71,7 @@ index 3040ac91..a476cacd 100644
      @abc.abstractmethod
      def accept_client(self, socket):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 6d3a4751..928532c7 100644
+index 13b75480..e6a3f405 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -207,7 +207,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
@@ -101,7 +101,7 @@ index 6d3a4751..928532c7 100644
                  elif self.upstream_client is not None:
                      upstream = await self.upstream_client.get_unihash(method, taskhash)
                      if upstream:
-@@ -479,8 +479,8 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -480,8 +480,8 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
              row = self.query_equivalent(cursor, data['method'], data['taskhash'])
  
              if row['unihash'] == data['unihash']:

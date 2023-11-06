@@ -1,4 +1,4 @@
-From abe52d881fc71a475cbdda6fbad4aab50da49f9c Mon Sep 17 00:00:00 2001
+From 4698a58d98a049c33a6d91c3dcb724a21f368dca Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Fri, 29 Sep 2023 14:47:07 -0600
 Subject: [PATCH 06/22] bitbake-hashserv: Allow arguments from environment

@@ -1,4 +1,4 @@
-From c392fc47c16e86b6ef9f36e1f484a2a64b976608 Mon Sep 17 00:00:00 2001
+From 7e3d838279c0007b84a04aaad5af2d1a23d7c910 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Fri, 29 Sep 2023 12:34:28 -0600
 Subject: [PATCH 03/22] asyncrpc: Add context manager API

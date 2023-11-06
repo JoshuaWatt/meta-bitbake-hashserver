@@ -1,4 +1,4 @@
-From c5cd650edbd68c20ea700e491e2613ccfdb4a4f3 Mon Sep 17 00:00:00 2001
+From c940ae8c751691c51225b58ffaa6df0d7ec8c877 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:29:40 -0600
 Subject: [PATCH 12/22] asyncrpc: client: Add disconnect API

@@ -1,4 +1,4 @@
-From be4da541c6a4c8a50c025c01ffd007a787f2bb1d Mon Sep 17 00:00:00 2001
+From 592f557caba697afd79de4f66e44f512c47d4685 Mon Sep 17 00:00:00 2001
 From: Joshua Watt <JPEWhacker@gmail.com>
 Date: Wed, 11 Oct 2023 13:03:27 -0600
 Subject: [PATCH 14/22] hashserv: Add become-user API
@@ -38,7 +38,7 @@ index 328c15cd..cfbc197e 100755
          except bb.asyncrpc.InvokeError as e:
              print(f"ERROR: {e}")
 diff --git a/lib/hashserv/client.py b/lib/hashserv/client.py
-index 5ed8d381..90f1dd71 100644
+index 82400fe5..4457f8e5 100644
 --- a/lib/hashserv/client.py
 +++ b/lib/hashserv/client.py
 @@ -18,10 +18,11 @@ class AsyncClient(bb.asyncrpc.AsyncClient):
@@ -148,7 +148,7 @@ index 5ed8d381..90f1dd71 100644
  
      def _get_async_client(self):
 diff --git a/lib/hashserv/server.py b/lib/hashserv/server.py
-index 5c70d81f..d506088e 100644
+index f5baa6be..ca419a1a 100644
 --- a/lib/hashserv/server.py
 +++ b/lib/hashserv/server.py
 @@ -255,6 +255,7 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
@@ -159,7 +159,7 @@ index 5c70d81f..d506088e 100644
              }
          )
  
-@@ -706,6 +707,23 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
+@@ -707,6 +708,23 @@ class ServerClient(bb.asyncrpc.AsyncServerConnection):
  
          return {"username": username}
  

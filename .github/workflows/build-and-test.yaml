@@ -244,10 +244,15 @@ jobs:
               ./$i-${CONTAINER_ARCH}-spdx.tar.zst
           done
 
-      # Can't run this yet because its not correctly set by meta-virt for x86_64
-      #- name: Validate container arch
-      #  run: |
-      #    [ $(skopeo inspect oci-archive:./${IMAGE_NAME}-${CONTAINER_ARCH}-oci.tar | jq -r .Architecture) == "${CONTAINER_ARCH}" ]
+      - name: Validate container arches
+        run: |
+          for i in $IMAGES; do
+            IMAGE_ARCH="$(skopeo inspect oci-archive:./$i-${CONTAINER_ARCH}-oci.tar | jq -r .Architecture)"
+            if [ "$IMAGE_ARCH" != "${CONTAINER_ARCH}" ]; then
+              echo "Bad image architecture '$IMAGE_ARCH'"
+              exit 1
+            fi
+          done
 
       - name: Save build cache
         if: steps.restore-build-cache.outputs.cache-hit != 'true'

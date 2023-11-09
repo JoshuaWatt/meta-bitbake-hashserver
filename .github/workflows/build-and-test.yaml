@@ -16,7 +16,7 @@ on:
 env:
   MACHINE: qemux86-64
   CONTAINER_ARCH: amd64
-  BITBAKE_GITREV: "f3ba9c3726ec7b38b557100d8a2d4b6a1446a968"
+  BITBAKE_GITREV: "a9fd4a45bb6e5ac9832835897f594f3bbf67e1aa"
 
 jobs:
   create-layer-cache:

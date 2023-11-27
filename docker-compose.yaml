@@ -27,8 +27,25 @@ services:
       - "HASHSERVER_DB=postgresql+asyncpg://postgresql:5432/hashserver"
       - HASHSERVER_DB_USERNAME=postgres
       - HASHSERVER_DB_PASSWORD=postgres
+      - HASHSERVER_ADMIN_USER=admin
+      - HASHSERVER_ADMIN_PASSWORD=secret
+      - "HASHSERVER_ANON_PERMS=@none"
     depends_on:
       - postgresql
+
+  webui:
+    image: ghcr.io/joshuawatt/bitbake-hashserver-web-ui:latest
+    pull_policy: always
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - "HSUI_HASHSERVER_ADDRESS=ws://hashserver:9000"
+      - HSUI_HASHSERVER_USER=admin
+      - HSUI_HASHSERVER_PASSWORD=secret
+      - HSUI_SELF_REGISTER_ENABLED=1
+      - "HSUI_DEFAULT_PERMS=@read"
+      - HSUI_TEST_USER=wattj
 
 volumes:
   postgres-data:
